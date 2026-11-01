@@ -41,6 +41,9 @@ def _path():
     return os.environ.get("HAND_GUARD_LEDGER") or DEFAULT
 
 
+_WRITE_FAILURES = []          # 本进程内台账写失败的次数与原因
+
+
 def note(guard, action, detail="", provenance=None):
     """action: "ran"（正常放行）/ "refused"（拒绝出结论）。写失败不许让闸崩。
 
@@ -57,9 +60,44 @@ def note(guard, action, detail="", provenance=None):
     try:
         with open(_path(), "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    except Exception as e:      # noqa: BLE001
+        # ★ 不许静默：写失败意味着这一发没有进账，而「没进账」与「没发生」
+        #   在表上逐字同形（跑了 12 次里有 3 次没记下来 ⇒ 表说 9 次）。
+        #   闸不许因此崩，但这件事必须留下痕迹：stderr 一行 + 进程内计数，
+        #   main() 看到计数就把 rc 抬到 4。
+        _WRITE_FAILURES.append("%s: %s" % (type(e).__name__, e))
+        print("!! 台账写失败（这一发没进账）: %s: %s" % (type(e).__name__, e),
+              file=sys.stderr)
     return rec
+
+
+def prune(keep=500, path=None):
+    """把最老的若干行搬进 .archive，并在账上留一行**自述**。
+
+    ★ 为什么必须留自述：归档之后，剩下的行看起来就是「本来只有这么多」——
+       **归档与丢行在读侧同形**。不写这一行，我今晚刚补的对账就
+       只能证明「读得懂」，证明不了「没被处理过」。
+
+    它同样抓不到什么：归档文件本身丢了，账上只有自述，对不上原件。
+    """
+    p = path or _path()
+    if not os.path.exists(p):
+        return {"archived": 0, "kept": 0}
+    with open(p, "r", encoding="utf-8") as f:
+        lines = [ln for ln in f.read().split("\n") if ln.strip()]
+    if len(lines) <= keep:
+        return {"archived": 0, "kept": len(lines)}
+    moved, stay = lines[:-keep], lines[-keep:]
+    arch = p + ".archive"
+    with open(arch, "a", encoding="utf-8") as f:
+        f.write("".join(ln2 + "\n" for ln2 in moved))
+    rec = {"ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+           "guard": "_ledger", "action": "pruned", "provenance": "unlabeled",
+           "detail": "归档 %d 行 → %s（保留 %d 行）" % (len(moved), arch, len(stay))}
+    with open(p, "w", encoding="utf-8") as f:
+        f.write("".join(ln2 + "\n" for ln2 in stay))
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    return {"archived": len(moved), "kept": len(stay), "archive": arch}
 
 
 def load_checked(path=None):
@@ -132,6 +170,8 @@ def table(records):
     """
     agg = {}
     for r in records:
+        if str(r.get("guard", "")).startswith("_"):
+            continue            # 台账自述行不是闸，单独印
         g = agg.setdefault(r.get("guard", "?"), {"ran": 0, "refused": 0, "last_refused": None,
                                                 "prov": {}})
         if r.get("action") == "refused":
@@ -171,6 +211,9 @@ def main():
         print("  ★ 它抓不到「整行丢失」：丢一整行时剩下的行都合法，行数自洽。")
         table(load())
         return 3
+    if _WRITE_FAILURES:
+        table(load())
+        return 4
     rows = table(load())
     if not rows:
         print("闸台账：空（%s）" % _path())
@@ -179,6 +222,14 @@ def main():
     print("闸台账（%s）" % _path())
     print("  读侧对账：行 %d / 解析 %d / 坏行 %d / 末行完整 %s"
           % (v["lines"], v["parsed"], v["bad"], v["tail_ok"]))
+    for r in load():
+        if str(r.get("guard", "")).startswith("_"):
+            print("  台账自述：%s %s" % (r.get("ts"), r.get("detail")))
+    if _WRITE_FAILURES:
+        print("  !! 本进程台账写失败 %d 次（这些发数没进账，表会偏小）"
+              % len(_WRITE_FAILURES))
+        for w in _WRITE_FAILURES[:3]:
+            print("     %s" % w)
     print("  %-16s %5s %5s  %-20s %s" % ("闸", "跑", "响不过", "上次响", "判定"))
     unlabeled_hits = []
     for g, ran, ref, last, verdict, prov in rows:

@@ -148,5 +148,62 @@ class ReadSideReconcileTest(_LedgerCase):
         self.assertTrue(v["consistent"])   # ← 丢了 1 行，账上一切正常
 
 
+class WriteFailureAndRetentionTest(_LedgerCase):
+    """我 4418 给 CZ 讲的两样，先落在自己仓里（不然就是「下次注意」）。
+
+    ①写失败不许被 `except: pass` 吞掉 —— 没进账与没发生在表上同形
+    ②归档必须自述 —— 归档之后剩下的行看起来就是「本来只有这么多」，
+      归档与丢行在读侧同形
+    """
+
+    def setUp(self):
+        super().setUp()
+        L._WRITE_FAILURES.clear()
+
+    def test_write_failure_is_not_silent(self):
+        """★ 这条对应我自己那句「写失败的出口必须 rc≠0」。改之前是 except: pass。"""
+        os.environ["HAND_GUARD_LEDGER"] = "/proc/nope/x.jsonl"   # 写不进去
+        L.note("g", "ran", "这一发会丢")
+        self.assertEqual(len(L._WRITE_FAILURES), 1)
+        self.assertIn("FileNotFoundError", L._WRITE_FAILURES[0])
+        self.assertEqual(L.main(), 4)                             # 表会偏小 ⇒ rc 非 0
+
+    def test_successful_write_leaves_no_failure_record(self):
+        L.note("g", "ran", "正常")
+        self.assertEqual(L._WRITE_FAILURES, [])
+        self.assertEqual(L.main(), 0)
+
+    def test_prune_moves_oldest_and_leaves_a_receipt(self):
+        for i in range(30):
+            L.note("g", "ran", "第 %d 发" % i)
+        r = L.prune(keep=10, path=self.p)
+        self.assertEqual(r["archived"], 20)
+        recs, bad, lines = L.load_checked(self.p)
+        self.assertEqual((lines, bad), (11, 0))          # 10 保留 + 1 自述
+        self.assertTrue(os.path.exists(self.p + ".archive"))
+        with open(self.p + ".archive", encoding="utf-8") as f:
+            self.assertEqual(len([ln for ln in f.read().split("\n") if ln.strip()]), 20)
+        receipts = [x for x in recs if x.get("guard") == "_ledger"]
+        self.assertEqual(len(receipts), 1)
+        self.assertIn("归档 20 行", receipts[0]["detail"])
+
+    def test_receipt_keeps_table_from_reading_it_as_a_gate(self):
+        """自述行不许被当成一道闸（否则表里凭空多出一道「已响过 0 的门」）。"""
+        for i in range(5):
+            L.note("g", "refused", "x")
+        L.prune(keep=2, path=self.p)
+        guards = [row[0] for row in L.table(L.load(self.p))]
+        self.assertEqual(guards, ["g"])
+
+    def test_archived_rows_are_not_counted_as_lost(self):
+        """归档之后对账仍自洽 —— 因为自述行说明了少掉的那些去哪了。"""
+        for i in range(20):
+            L.note("g", "refused", "x")
+        L.prune(keep=5, path=self.p)
+        v = L.verify(self.p)
+        self.assertTrue(v["consistent"])
+        self.assertEqual(v["lines"], 6)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
