@@ -37,6 +37,7 @@ if _ROOT not in sys.path:
 
 _records = {}       # (test, lineno, method) -> hit count（本文件内）
 _external = {}       # (test, file, lineno, method) -> hit count（本文件外，必须报）
+_args = {}          # (test, lineno, method) -> 第一次调用的实参 repr（值面：样本上这两个值是否恒等）
 assert_methods = ("assertEqual", "assertNotEqual", "assertTrue", "assertFalse",
                   "assertIn", "assertNotIn", "assertIsNone", "assertIsNotNone",
                   "assertGreater", "assertGreaterEqual", "assertLess", "assertLessEqual",
@@ -50,6 +51,10 @@ def _wrap(orig, name):
         if fn == TARGET:
             key = (self._testMethodName, f.f_lineno, name)
             _records[key] = _records.get(key, 0) + 1
+            # 值面：只记第一次的实参。为的是事后能问「这两个被断言的值，
+            # 在这套样本上是不是恒等」——恒等则格分不开，刀红也不分。
+            if key not in _args:
+                _args[key] = [repr(x)[:90] for x in a[:4]]
         else:
             # 不在本文件里的断言：**不许静默丢掉**。
             # 丢掉它意味着「这一格的判据有一部分我看不见」，而看不见和全绿同形。
@@ -97,6 +102,23 @@ def main():
     suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_code_drift")
     with open(os.devnull, "w") as devnull:
         res = unittest.TextTestRunner(resultclass=FirstRed, stream=devnull).run(suite)
+    # 值面：把每一格每条 assert 的实参印出来。判「样本退化」时不用再读源码，
+    # 也就不用凭记忆——凭记忆的那一次我在 17:4x 已经错过一次。
+    print("\n== 值面（每条 assert 的实参，第一次调用）==")
+    for (test, line, meth), vs in sorted(_args.items()):
+        print("  %-58s L%-4d %-16s %s"
+              % (test[:58], line, meth, " | ".join(vs)))
+
+    # 行号也要回读：把该行的源码原文一并印出来。
+    # 只印行号的话，「红在 L137」是我说的；带上原文，它能被对方核。
+    src = open(TARGET, encoding="utf-8").read().splitlines()
+    fr = getattr(res, "first_red", {}) or {}
+    if fr:
+        print("\n== first_red 回读（行号 + 该行原文）==")
+        for test, line in sorted(fr.items()):
+            txt = src[line - 1].strip() if line and line <= len(src) else "<行号越界>"
+            print("  %-48s %-4s %s" % (test[:48], line, txt[:100]))
+
     # 落点回读：报告**被测进程实际 import 的那份文件**的 sha，
     # 不是「我以为我写的那份」。两者不是同一个事实——
     # 「我写了」与「它读到的是那份」之间隔着 .pyc 缓存、cwd、sys.path、
