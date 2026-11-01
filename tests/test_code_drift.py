@@ -49,9 +49,12 @@ class TestCodeDrift(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     # 1 真值：a.py 内容变了 -> changed 里有它，且只有它
+    #    改动用同长度（"A = 1" -> "A = 2"，都是 6 字节）：
+    #    2026-11-01 用 size+mode 的刀打这一格，一刀没红，才发现原来写的是
+    #    "A = 999"（8 字节）——只在「大小也变了」的世界里验过，格子一半是空的。
     def test_changed_file_is_named(self):
         start = M._code_snapshot(self.tmp)
-        _mk(self.tmp, "hand/a.py", "A = 999\n")
+        _mk(self.tmp, "hand/a.py", "A = 2\n")
         ch, ad, gone = M._code_drift(self.tmp, at_start=start)
         self.assertEqual(ch, ["hand/a.py"])
         self.assertEqual(ad, [])
