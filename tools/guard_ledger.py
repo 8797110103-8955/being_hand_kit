@@ -18,6 +18,16 @@
 
   python3 tools/guard_ledger.py          # 打表
 环境变量 HAND_GUARD_LEDGER 可改路径（测试用临时文件，不污染真台账）。
+
+边界（2026-11-01T19:5xZ 量过，不是推测）：
+  · 并发写：本装置设计为**单进程**。不给并发格，是因为并发测试在 Linux 上
+    恒过（append 原子）、在 Windows 上恒丢，写成格只会得到一条平台彩票。
+    实测见 tools/ledger_concurrency_probe.py（commit 111c881）：
+    Linux 上 append_io/append_os/flock/shard 各丢 0，正控 seek_rw 丢 39；
+    同一段 append 代码在 CZ 那台 Windows 上 4 进程 × 25 行丢 26、坏行 0。
+    ⇒ 要在多进程里写这个台账，写侧先按 probe 的读数选写法，别指望这层。
+  · 整行丢失读侧抓不到（verify() 的分母是它自己）——见 tests 里那格
+    test_whole_line_loss_is_NOT_detectable。
 """
 import json
 import os
