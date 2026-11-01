@@ -86,6 +86,33 @@ KNIVES = {
 }
 
 
+def invalid_reasons(base, rows, orig):
+    """本轮读数为什么不成形 —— 纯判据，不跑任何东西，可以被单测喂合成数据。
+
+    为什么会缺「基线」这一栏（2026-11-01 18:5x，纸面检查自己的闸时发现）：
+    我第一版只查了每把刀的行，没查 clean 基线。于是「基线自己崩了」与
+    「基线正常」在报表上是同一个读数——基线的 rc 只被 print 出来，从不参与判断。
+    ★ 值域检查问句：这道闸的所有取值里，有没有两个结局指向同一个值？
+      「基线坏了 / 基线好」当时指向同一个值（都能印出汇总），就是抹平。
+
+    基线要满足两条：rc 是解析出来的回执；module_sha == sha8(写完但没变异的那份源码)
+    —— 后者与每把刀的 landed 是同一件事，只是对象换成「未变异的原文」。
+    """
+    bad = []
+    if base.get("rc") in ("UNPARSED", "CRASH"):
+        bad.append("基线读数没解析出来 rc=%s" % base.get("rc"))
+    elif base.get("module_sha") != sha8(orig):
+        bad.append("基线没读到我要的那份：want=%s got=%s"
+                   % (sha8(orig), base.get("module_sha")))
+    unparsed = [r[0] for r in rows if r[1] in ("UNPARSED", "CRASH")]
+    if unparsed:
+        bad.append("刀读数没解析出来 %d/%d %s" % (len(unparsed), len(rows), unparsed))
+    not_landed = [r[0] for r in rows if r[5] is not True]
+    if not_landed:
+        bad.append("刀没落在我要的位置 %d/%d %s" % (len(not_landed), len(rows), not_landed))
+    return bad
+
+
 def sha8(text):
     return hashlib.sha256(text.encode()).hexdigest()[:8]
 
@@ -157,15 +184,12 @@ def main():
     # 一个读者（就是我）从上面读到的结论是「这批刀一把都没分辨力」——
     # 一个从未被测到的世界，被印成了「测过，结论是零」。
     # 判据：任一格的读数不是解析出来的回执，整批作废，不给汇总。
-    unparsed = [r[0] for r in rows if r[1] in ("UNPARSED", "CRASH")]
-    not_landed = [r[0] for r in rows if r[5] is not True]
-    if unparsed or not_landed:
+    bad = invalid_reasons(base, rows, orig)
+    if bad:
         print("\n== 汇总 ==")
         print("  !! RUN INVALID — 本轮不给结论")
-        if unparsed:
-            print("     读数没解析出来  %d/%d  %s" % (len(unparsed), len(rows), unparsed))
-        if not_landed:
-            print("     没落在我要的位置 %d/%d  %s" % (len(not_landed), len(rows), not_landed))
+        for line in bad:
+            print("     " + line)
         print("     （汇总段被跳过：空读数与「测过且为零」在报表上不许同形）")
         return 9
 
