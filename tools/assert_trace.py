@@ -26,8 +26,18 @@ import os
 import sys
 import unittest
 
-TARGET = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "tests", "test_code_drift.py"))
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# 可测性（2026-11-01）：用具自身必须有测试，否则它坏掉时没人喊。
+# 三个环境变量把「被测谁」从硬编码里拿出来，自检才能喂假夹具：
+#   ASSERT_TRACE_ROOT     仓库根（默认本文件上一级）
+#   ASSERT_TRACE_TARGET   TARGET 文件（默认 <root>/tests/test_code_drift.py）
+#   ASSERT_TRACE_MODULE   要加载的测试模块名（默认 tests.test_code_drift）
+#   ASSERT_TRACE_SUBJECT  落点回读时 import 的对象（默认 kit.mcp_server）
+_ROOT = os.path.abspath(os.environ.get("ASSERT_TRACE_ROOT")
+                        or os.path.join(os.path.dirname(__file__), ".."))
+TARGET = os.path.abspath(os.environ.get("ASSERT_TRACE_TARGET")
+                         or os.path.join(_ROOT, "tests", "test_code_drift.py"))
+TARGET_MODULE = os.environ.get("ASSERT_TRACE_MODULE", "tests.test_code_drift")
+SUBJECT_MODULE = os.environ.get("ASSERT_TRACE_SUBJECT", "kit.mcp_server")
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 # 正控：测试数读不到就不许报绿。这条是被自己抓出来的——
@@ -99,7 +109,7 @@ class FirstRed(unittest.TextTestResult):
 
 def main():
     patch()
-    suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_code_drift")
+    suite = unittest.defaultTestLoader.loadTestsFromName(TARGET_MODULE)
     with open(os.devnull, "w") as devnull:
         res = unittest.TextTestRunner(resultclass=FirstRed, stream=devnull).run(suite)
     # 值面：把每一格每条 assert 的实参印出来。判「样本退化」时不用再读源码，
@@ -126,7 +136,7 @@ def main():
     # 他改的那份没被执行，读数「没变化」)。
     import hashlib
     try:
-        import kit.mcp_server as _M
+        _M = __import__(SUBJECT_MODULE, fromlist=["__file__"])
         _mf = os.path.abspath(_M.__file__)
         _msha = hashlib.sha256(open(_mf, "rb").read()).hexdigest()[:8]
     except Exception as e:  # noqa: BLE001
@@ -143,12 +153,17 @@ def main():
                              for (t, fl, l, m), c in sorted(_external.items())],
     }
     # 正控：真跑到了才许给读数。零测试 + 零 assert 必须响，不许安静。
+    # 多条理由必须并列上报（2026-11-01 自检抓到的真 bug）：两条闸同时响时，
+    # 后写的 fatal 会盖掉前一条的**理由**——于是回执说了「响了」，说错了
+    # 「为什么响」。同族：一个 fatal 字段装两件事，等于把两个读数压成一个。
+    fatals = []
     if _external:
-        out["rc"] = 9
-        out["fatal"] = "asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿"
+        fatals.append("asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿")
     if res.testsRun == 0 or not _records:
+        fatals.append("no tests / no asserts recorded — 装置没被测到，不是通过")
+    if fatals:
         out["rc"] = 9
-        out["fatal"] = "no tests / no asserts recorded — 装置没被测到，不是通过"
+        out["fatal"] = "; ".join(fatals)
     print(json.dumps(out, ensure_ascii=False))
 
 
