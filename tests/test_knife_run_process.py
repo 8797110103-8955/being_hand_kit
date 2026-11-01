@@ -22,6 +22,7 @@ Neuromancer 给了第三个轴「位置」：算出来 / 喊出来 / 真退出�
   KNIFE_RUN_TRACER  尺子脚本
 真仓的 kit/mcp_server.py 被复制进临时根，所以 13 把刀的前置全部成立。
 """
+import contextlib
 import os
 import pathlib
 import shutil
@@ -114,23 +115,47 @@ class Foundation(unittest.TestCase):
     sha 校验只覆盖「我写进去的 → 子进程读的」。它不覆盖
     「我写进去之前那份是不是原版」。实测（不是推理）：把 kit/mcp_server.py
     留在变异态，clean 基线照样 rc=0、landed 全 True、十把刀全落在变异地上。
-    ⇒ 「上一轮的残局当这一轮的地基」与「地基是原版」在读数上同形。"""
+    ⇒ 「上一轮的残局当这一轮的地基」与「地基是原版」在读数上同形。
+
+    ★ 2026-11-02T02:4xZ 补：**这个类的自测本身就是一个残局生产者。**
+      为了验证「脏了会不会拒」，它先把真原件写脏，再用 git checkout 复原。
+      内容复原了（git diff 干净），但**进程若在 write_text 与 checkout 之间死掉，
+      留下的正好是这个守卫要防的那种残局**，而「复原成功」与「复原没执行」
+      在读数上同形——除非复原动作自己带验证。
+      ⇒ 所以复原不许只 checkout：先记 sha256，复原后**回读比对**，
+        不一致就当场失败（而不是安静地把脏文件留在仓里）。
+    """
+
+    @contextlib.contextmanager
+    def _dirty_and_restore(self, target):
+        """把地基文件写脏 → 复原 → **验证复原真的发生了**。"""
+        import hashlib
+
+        before = hashlib.sha256(target.read_bytes()).hexdigest()
+        target.write_text(target.read_text() + "\n# dirty\n")
+        try:
+            yield
+        finally:
+            import subprocess as sp
+            sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
+                    str(target)], check=True)
+            after = hashlib.sha256(target.read_bytes()).hexdigest()
+            if after != before:
+                self.fail(
+                    "复原没回到原版：%s\n  写之前 sha=%s\n  复原后 sha=%s\n"
+                    "  ⇒ 仓里现在留着一份变异的地基文件，而这个守卫正是为它写的"
+                    % (target.name, before[:12], after[:12]))
 
     def test_clean_repo_is_not_dirty(self):
         state, why = knife_run.foundation_dirty()
         self.assertEqual(state, "clean", "真仓干净却报 %s —— 这格会天天误红" % state)
 
     def test_tracked_file_with_uncommitted_change_is_dirty(self):
-        import subprocess as sp
         target = knife_run.SRC
-        target.write_text(target.read_text() + "\n# dirty\n")
-        try:
+        with self._dirty_and_restore(target):
             state, why = knife_run.foundation_dirty()
             self.assertEqual(state, "dirty", "改了被追踪的文件却报 %s —— 残局冒充原版" % state)
             self.assertIn("HEAD", why)
-        finally:
-            sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
-                    str(target)], check=True)
 
     def test_git_rc1_is_not_enough_to_call_it_dirty(self):
         """★ `git diff --quiet HEAD` 在非仓目录里也返回 rc=1。
@@ -149,15 +174,10 @@ class Foundation(unittest.TestCase):
                          "非仓目录被读成 %s —— rc=1 的两个互斥结局又被合并了" % state)
 
     def test_dirty_foundation_refuses_whole_batch(self):
-        import subprocess as sp
         target = knife_run.SRC
-        target.write_text(target.read_text() + "\n# dirty\n")
-        try:
+        with self._dirty_and_restore(target):
             rc = knife_run.main()
             self.assertEqual(rc, 9, "地基脏了还给读数 —— 这一批全砍在残局上")
-        finally:
-            sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
-                    str(target)], check=True)
 
     # ——— 2026-11-01T22:4xZ：把「地基只比 SRC 一个文件」这笔明账落成四格 ———
 

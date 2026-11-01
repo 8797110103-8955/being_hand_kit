@@ -21,7 +21,7 @@ os.environ.setdefault(
 )
 
 
-MODULES = ["tests.test_type_landed", "tests.test_plan", "tests.test_tier2_3", "tests.test_platform", "tests.test_vision_llm", "tests.test_cdp_contract", "tests.test_cdp_contract_real", "tests.test_page_identity", "tests.test_windows_support", "tests.test_receipt_contract", "tests.test_truncation", "tests.test_ax_tree", "tests.test_ax_see", "tests.test_macos_discovery", "tests.test_chrome_profile", "tests.test_kit_quickfixes", "tests.test_release_070", "tests.test_release_080", "tests.test_release_097", "tests.test_release_098", "tests.test_release_0100", "tests.test_release_chain", "tests.test_hand_api", "tests.test_visual_state", "tests.test_ocr_diff", "tests.test_expect_spec", "tests.test_viewport_alignment", "tests.test_text_match", "tests.test_enter_submit", "tests.test_handle_staleness", "tests.test_heading_redirect", "tests.test_clickable_point", "tests.test_eye_check", "tests.test_emitted", "tests.test_action_primitives", "tests.test_release_0110", "tests.test_frame_diff", "tests.test_effect", "tests.test_release_0120", "tests.test_release_0130", "tests.test_iframe_coords", "tests.test_release_0131", "tests.test_iframe_transform", "tests.test_iframe_transform_geo", "tests.test_release_0132", "tests.test_dom_no_text", "tests.test_release_0133", "tests.test_frame_origins", "tests.test_release_0134", "tests.test_effect_channels", "tests.test_release_0135", "tests.test_release_0136", "tests.test_release_0137", "tests.test_xy_expect", "tests.test_dpr_decl", "tests.test_dpr_tiers", "tests.test_owner", "tests.test_owner_listener", "tests.test_click_once", "tests.test_dpr_single_read", "tests.test_version_fork", "tests.test_selfharm", "tests.test_sync_service_evidence", "tests.test_sync_age_threshold", "tests.test_sync_stop_action", "tests.test_pid_probe", "tests.test_kill_receipt", "tests.test_bin_smoke", "tests.test_runner_registry", "tests.test_roster_extract", "tests.test_code_drift", "tests.test_assert_trace_selfcheck", "tests.test_knife_run_report", "tests.test_guard_ledger", "tests.test_zero_stamp", "tests.test_finally_audit", "tests.test_gate_driver", "tests.test_knife_run_process", "tests.test_entry_scan"]
+MODULES = ["tests.test_type_landed", "tests.test_plan", "tests.test_tier2_3", "tests.test_platform", "tests.test_vision_llm", "tests.test_cdp_contract", "tests.test_cdp_contract_real", "tests.test_page_identity", "tests.test_windows_support", "tests.test_receipt_contract", "tests.test_truncation", "tests.test_ax_tree", "tests.test_ax_see", "tests.test_macos_discovery", "tests.test_chrome_profile", "tests.test_kit_quickfixes", "tests.test_release_070", "tests.test_release_080", "tests.test_release_097", "tests.test_release_098", "tests.test_release_0100", "tests.test_release_chain", "tests.test_hand_api", "tests.test_visual_state", "tests.test_ocr_diff", "tests.test_expect_spec", "tests.test_viewport_alignment", "tests.test_text_match", "tests.test_enter_submit", "tests.test_handle_staleness", "tests.test_heading_redirect", "tests.test_clickable_point", "tests.test_eye_check", "tests.test_emitted", "tests.test_action_primitives", "tests.test_release_0110", "tests.test_frame_diff", "tests.test_effect", "tests.test_release_0120", "tests.test_release_0130", "tests.test_iframe_coords", "tests.test_release_0131", "tests.test_iframe_transform", "tests.test_iframe_transform_geo", "tests.test_release_0132", "tests.test_dom_no_text", "tests.test_release_0133", "tests.test_frame_origins", "tests.test_release_0134", "tests.test_effect_channels", "tests.test_release_0135", "tests.test_release_0136", "tests.test_release_0137", "tests.test_xy_expect", "tests.test_dpr_decl", "tests.test_dpr_tiers", "tests.test_owner", "tests.test_owner_listener", "tests.test_click_once", "tests.test_dpr_single_read", "tests.test_version_fork", "tests.test_selfharm", "tests.test_sync_service_evidence", "tests.test_sync_age_threshold", "tests.test_sync_stop_action", "tests.test_pid_probe", "tests.test_kill_receipt", "tests.test_bin_smoke", "tests.test_runner_registry", "tests.test_roster_extract", "tests.test_code_drift", "tests.test_assert_trace_selfcheck", "tests.test_knife_run_report", "tests.test_guard_ledger", "tests.test_zero_stamp", "tests.test_finally_audit", "tests.test_gate_driver", "tests.test_knife_run_process", "tests.test_entry_scan", "tests.test_forall_scan"]
 
 
 def registry_report(on_disk=None, modules=None):
@@ -172,4 +172,32 @@ if __name__ == "__main__":
         for p in problems:
             print("  ✗ " + p)
     ok = result.wasSuccessful() and not problems and not reasonless
+
+    # ★ 2026-11-02T02:5xZ：收尾时自己核一遍地基。
+    # 起因是实测事故（不是推理）：`timeout 30` 把本套件砍死在
+    # tests.test_knife_run_process.Foundation 的「先写脏再 checkout 复原」窗口里，
+    # 仓里留下 kit/mcp_server.py 一行变异 —— 而外层 runner 照样印 OK、rc=0。
+    # ⇒ 那个守卫的自测本身就是一个残局生产者；而它防的那种残局，
+    #   在这一层读起来与「一切正常」逐字相同（RUN INVALID 只印在嵌套那次调用的 stdout 里）。
+    # ⇒ 判据：**「本次跑完，仓还是不是原版」必须由这层自己问一次，
+    #   不能寄望于下一次跑的开工检查。**
+    foundation_note = ""
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "tools"))
+        import knife_run as _kr
+        state, why = _kr.foundation_dirty()
+        if state != "clean":
+            foundation_note = "state=%s why=%r" % (state, why)
+    except Exception as e:                      # 查不了 ≠ 干净
+        foundation_note = "地基核查本身没跑成（%s: %s）—— 未验，不许当通过" % (
+            type(e).__name__, e)
+
+    if foundation_note:
+        print("\n" + "=" * 70)
+        print("!! 本套件跑完之后，仓里的地基不是原版：")
+        print("   " + foundation_note)
+        print("   ⇒ 上面那些绿是在一块可能已被本套件自己弄脏的地基上取得的")
+
+    ok = ok and not foundation_note
     sys.exit(0 if ok else 1)
