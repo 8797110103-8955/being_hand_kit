@@ -205,5 +205,31 @@ class WriteFailureAndRetentionTest(_LedgerCase):
         self.assertEqual(v["lines"], 6)
 
 
+class WiringIsATestNotAClaimTest(unittest.TestCase):
+    """★ 「装上了」的唯一读数：它自己在活路径上留下过一行。
+
+    2026-11-01T20:1xZ 撞到的：knife_run 的 import 兜底是一个静默 no-op，
+    直接跑脚本时 tools 不在 sys.path 上 ⇒ guard_note 啥也不做，
+    台账里从来没有 knife_run 这道闸。表看起来很干净，因为我只核了在场的那两行，
+    没问「应该在场的那行为什么不在」。
+    """
+
+    def test_knife_run_ledger_import_is_wired(self):
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+        sys.path.insert(0, root)
+        import importlib
+        kr = importlib.import_module("tools.knife_run")
+        self.assertTrue(getattr(kr, "_LEDGER_WIRED", False),
+                        "knife_run 的台账 import 退化成 no-op 了——这一发不会进账")
+
+    def test_fallback_is_not_silent(self):
+        """兜底可以存在，但不许是 pass。源码里出现裸 no-op 兜底就红。"""
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+        with open(os.path.join(root, "tools", "knife_run.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertNotIn("def guard_note(*a, **k):\n        pass", src)
+        self.assertIn("台账未接线", src)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

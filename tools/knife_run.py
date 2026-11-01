@@ -20,16 +20,27 @@
 """
 import hashlib
 import json
+import os
 import platform
+import sys
 
+# ★ 2026-11-01T20:1xZ 修：这里原来是一个**静默退化的兜底**——
+#   直接跑 `python3 tools/knife_run.py` 时 tools 不在 sys.path 上，
+#   两个 import 都失败，于是 guard_note 变成一个 no-op，
+#   台账里**从来没有 knife_run 这道闸**。它的症状是「表看起来很干净」：
+#   我 4418 对外说「已接 knife_run 两路」，表上一行都没有，而我读表时
+#   只看了 assert_trace 那两行对得上，没问「knife_run 为什么不在」。
+#   ⇒ 兜底不许是 no-op。要么接上，要么吼出来。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
-    from tools.guard_ledger import note as guard_note
-except Exception:  # 作为脚本直接跑时 tools 不在路径上
-    try:
-        from guard_ledger import note as guard_note
-    except Exception:
-        def guard_note(*a, **k):
-            pass
+    from guard_ledger import note as guard_note
+    _LEDGER_WIRED = True
+except Exception as _e:      # noqa: BLE001
+    _LEDGER_WIRED = False
+
+    def guard_note(*a, **k):
+        print("!! 台账未接线（这一发不会进账）: %s: %s"
+              % (type(_e).__name__, _e), file=sys.stderr)
 import pathlib
 import subprocess
 import sys
@@ -224,6 +235,17 @@ def main():
             print("    类（空）%-36s ← %s" % ("", " + ".join(names)))
 
     guard_note("knife_run", "ran", "clean")
+    # 接线（2026-11-01T20:0xZ）：prune 写好半小时内是**零调用点**——
+    # 一个挂在墙上的扳手不是装置。这是它唯一的活路径，每次都问、极少真搬；
+    # 真搬时它会自己在账上留一行自述（归档与丢行在读侧同形）。
+    try:
+        from guard_ledger import prune as _prune
+        r = _prune(keep=500)
+        if r.get("archived"):
+            print("  台账归档        %d 行 → %s（账上已留自述）"
+                  % (r["archived"], r.get("archive")))
+    except Exception as e:      # noqa: BLE001
+        print("  !! 台账归档失败（不吞）: %s: %s" % (type(e).__name__, e))
     return 0
 
 
