@@ -16,6 +16,14 @@
   假阳 1 例（ledger_concurrency_probe.py）。并入 SystemExit 后归零。
   这正是我给 Neuromancer 的那一刀，回旋到自己手上。扫描器自己得先过这一关。
 
+分两档（2026-11-01T21:2xZ，抄 Neuromancer 的 DANGER/WARN，因为他那条我信）：
+  洞  —— __main__ 块在场，但没有任何东西决定退出码。这是 assert_trace 那一晚，
+         必然假绿，红。
+  疑  —— 有 main() 却没有 __main__ 块。Hand 里每个 tool 都是 CLI，所以看着像洞；
+         但一个被别的工具 import 的模块本来就没有退出码。**这一档我判它红是过报
+         还是真洞，没验过**（实仓 0 例，从没打到过真材料）。
+         按「过度报警的代价不是多余，是一红就被当噪音关掉」，它单列、不红。
+
 退出码：0 = 没有洞（审计器的正控必须是绿的）；1 = 有洞，逐条印出来。
 """
 import ast
@@ -51,9 +59,9 @@ def has_exit(node):
 
 
 def scan(root):
-    """→ (检查数, 问题列表[(文件名, 原因)])。"""
+    """→ (检查数, 洞列表[(文件名, 原因)])。疑不在这里 —— 它不是洞。"""
     root = pathlib.Path(root)
-    problems, checked = [], 0
+    problems, suspects, checked = [], [], 0
     for p in sorted((root / "tools").glob("*.py")):
         try:
             tree = ast.parse(p.read_text())
@@ -67,20 +75,23 @@ def scan(root):
             continue
         checked += 1
         if entry is None:
-            problems.append((p.name, "有 main() 但没有 __main__ 入口块，"
+            suspects.append((p.name, "有 main() 但没有 __main__ 入口块，"
                                      "rc 只能靠 import 它的人去传"))
         elif not has_exit(entry):
             problems.append((p.name, "__main__ 块调了东西但不决定退出码 —— "
                                      "它的 rc 走哪条路出去？"))
-    return checked, problems
+    return checked, problems, suspects
 
 
 def main(argv):
     root = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path(__file__).parent.parent
-    checked, problems = scan(root)
-    print("扫了 %d 个有 main() 的 tool，问题 %d 条" % (checked, len(problems)))
+    checked, problems, suspects = scan(root)
+    print("扫了 %d 个有 main() 的 tool，洞 %d 条，疑 %d 条"
+          % (checked, len(problems), len(suspects)))
     for name, why in problems:
-        print("  !! %-28s %s" % (name, why))
+        print("  !! 洞 %-25s %s" % (name, why))
+    for name, why in suspects:
+        print("  ?? 疑 %-25s %s" % (name, why))
     if problems:
         return 1
     print("  所有 main() 的 rc 都在入口处被兑现（sys.exit / SystemExit）")
