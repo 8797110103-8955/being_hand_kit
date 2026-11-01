@@ -119,8 +119,9 @@ def main():
     rows = []
     try:
         for name, (old, new) in KNIVES.items():
+            n_occ = orig.count(old)
             if old not in orig:
-                rows.append((name, "NO-PRECONDITION", [], None, "", ""))
+                rows.append((name, "NO-PRECONDITION", [], None, "", "", (), n_occ))
                 continue
             mutated = orig.replace(old, new, 1)
             SRC.write_text(mutated)
@@ -131,20 +132,20 @@ def main():
             fr = d.get("first_red") or {}
             # 两级粒度都要留：只留 test 名会把「同一格红在不同行」读成同红组。
             sig = tuple(sorted(fr.items()))          # ((test, 行号), ...)
-            rows.append((name, d.get("rc"), sorted(fr), want_sha, got_sha, landed, sig))
+            rows.append((name, d.get("rc"), sorted(fr), want_sha, got_sha, landed, sig, n_occ))
     finally:
         SRC.write_text(orig)
 
     print("\n== 刀 × 读数 ==")
     print("%-28s %-4s %-6s %-3s %s" % ("knife", "rc", "landed", "red", "first_red"))
-    for name, rc, red, wsha, gsha, landed, _sig in rows:
+    for name, rc, red, wsha, gsha, landed, _sig, n_occ in rows:
         print("%-28s %-4s %-6s %-3d %s"
               % (name, str(rc), str(landed), len(red), ",".join(red) or "—"))
 
     empty = [r for r in rows if r[1] == 0]
     classes = {}
     classes_line = {}
-    for name, rc, red, wsha, gsha, landed, sig in rows:
+    for name, rc, red, wsha, gsha, landed, sig, n_occ in rows:
         if rc == "NO-PRECONDITION":
             continue
         classes_line.setdefault(sig, []).append(name)
@@ -154,6 +155,9 @@ def main():
     same_red = [names for red, names in classes.items() if len(names) > 1]
     print("  刀数            %d" % len(KNIVES))
     print("  空刀            %d  %s" % (len(empty), [e[0] for e in empty]))
+    amb = [(r[0], r[7]) for r in rows if r[7] > 1]
+    print("  非唯一落点      %d  %s   （old 在源码出现 >1 次 ⇒ 这次替换的位置不由这把刀决定，红的归因不成立）"
+          % (len(amb), amb))
     print("  类数 test粒度   %d   行粒度 %d   （下界；两者不等说明有格红在同格不同行）"
           % (len([c for c in classes if c]), len([c for c in classes_line if c])))
     print("  同红组待分      test粒度 %d 组 %s" % (len(same_red),
