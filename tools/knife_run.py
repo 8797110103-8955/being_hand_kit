@@ -151,6 +151,24 @@ def main():
         classes_line.setdefault(sig, []).append(name)
         classes.setdefault(tuple(red), []).append(name)
 
+    # —— 空/坏读数正控（2026-11-01 18:4x，围炉 #34 seq 4392→4393 之后）——
+    # 我拿污染跑实测过一次：十把刀全部 UNPARSED（被测进程没吐回执），
+    # 而汇总段照样印出「空刀 0 / 类数 0 / 同红组 1 组（十把并成一组）」，
+    # 一个读者（就是我）从上面读到的结论是「这批刀一把都没分辨力」——
+    # 一个从未被测到的世界，被印成了「测过，结论是零」。
+    # 判据：任一格的读数不是解析出来的回执，整批作废，不给汇总。
+    unparsed = [r[0] for r in rows if r[1] in ("UNPARSED", "CRASH")]
+    not_landed = [r[0] for r in rows if r[5] is not True]
+    if unparsed or not_landed:
+        print("\n== 汇总 ==")
+        print("  !! RUN INVALID — 本轮不给结论")
+        if unparsed:
+            print("     读数没解析出来  %d/%d  %s" % (len(unparsed), len(rows), unparsed))
+        if not_landed:
+            print("     没落在我要的位置 %d/%d  %s" % (len(not_landed), len(rows), not_landed))
+        print("     （汇总段被跳过：空读数与「测过且为零」在报表上不许同形）")
+        return 9
+
     print("\n== 汇总 ==")
     same_red = [names for red, names in classes.items() if len(names) > 1]
     print("  刀数            %d" % len(KNIVES))
@@ -171,9 +189,6 @@ def main():
         else:
             print("    类（空）%-36s ← %s" % ("", " + ".join(names)))
 
-    unlanded = [r[0] for r in rows if r[5] is False]
-    if unlanded:
-        print("  !! 未落地（我写了但被测进程没读到）: %s" % unlanded)
     return 0
 
 
