@@ -1,33 +1,4 @@
-{"ts": "2026-11-01T10:55:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:55:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18"}
-{"ts": "2026-11-01T10:55:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:51Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:55:51Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:55:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:55:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:53Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18"}
-{"ts": "2026-11-01T10:55:53Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:53Z", "guard": "knife_run", "action": "ran", "detail": "clean"}
-{"ts": "2026-11-01T10:55:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:55:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:55:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18"}
-{"ts": "2026-11-01T10:55:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:56:00Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:56:00Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:56:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17"}
-{"ts": "2026-11-01T10:56:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:56:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18"}
-{"ts": "2026-11-01T10:56:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19"}
-{"ts": "2026-11-01T10:56:02Z", "guard": "knife_run", "action": "ran", "detail": "clean"}
-{"ts": "2026-11-01T10:56:07Z", "guard": "knife_run", "action": "refused", "detail": "基线读数没解析出来 rc=UNPARSED ; 刀读数没解析出来 10/10 ['K1_changed_never', 'K2_added_missing_swapped', 'K3_pycache_kept', 'K4_unreadable_dropped', 'K5_hot_is_changed', 'K6_hot_is_loaded', 'K7_hot_empty', 'K8_loaded_"}
-{"ts": "2026-11-01T10:56:56Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0"}
-{"ts": "2026-11-01T10:56:56Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1"}
-{"ts": "2026-11-01T10:56:56Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0"}
-{"ts": "2026-11-01T10:56:56Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1"}
-{"ts": "2026-11-01T10:57:38Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0"}
-{"ts": "2026-11-01T10:57:38Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1"}
-{"ts": "2026-11-01T10:57:39Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0"}
-{"ts": "2026-11-01T10:57:39Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1"}
+{"ts": "2026-11-01T11:39:27Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py"}
+{"ts": "2026-11-01T11:39:27Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py"}
+{"ts": "2026-11-01T11:39:27Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py"}
+{"ts": "2026-11-01T11:39:27Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py"}

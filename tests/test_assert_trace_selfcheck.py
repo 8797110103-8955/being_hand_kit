@@ -35,6 +35,8 @@ def _run_fixture(files):
         for name, src in files.items():
             (root / name).write_text(src)
         env = dict(os.environ)
+        # 测试造的世界必须自报来历：否则台账上「我造的」与「真实世界出过一次」同形。
+        env["HAND_GUARD_PROVENANCE"] = "constructed:tests/test_assert_trace_selfcheck.py"
         env.update(
             PYTHONPATH=str(root),
             ASSERT_TRACE_ROOT=str(root),
@@ -140,6 +142,7 @@ class LandedColumnSelfcheck(unittest.TestCase):
                 "        self.assertEqual(1, 1)\n"
             )
             env = dict(os.environ)
+            env["HAND_GUARD_PROVENANCE"] = "constructed:tests/test_assert_trace_selfcheck.py"
             env.update(PYTHONPATH=str(shad), ASSERT_TRACE_ROOT=str(root),
                        ASSERT_TRACE_TARGET=str(root / "tests" / "test_fixture.py"),
                        ASSERT_TRACE_MODULE="tests.test_fixture",

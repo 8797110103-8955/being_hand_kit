@@ -31,10 +31,19 @@ def _path():
     return os.environ.get("HAND_GUARD_LEDGER") or DEFAULT
 
 
-def note(guard, action, detail=""):
-    """action: "ran"（正常放行）/ "refused"（拒绝出结论）。写失败不许让闸崩。"""
+def note(guard, action, detail="", provenance=None):
+    """action: "ran"（正常放行）/ "refused"（拒绝出结论）。写失败不许让闸崩。
+
+    provenance：这一行的**来历**——那个"坏世界"是谁造的。
+      构造请显式自报（外壳脚本 export HAND_GUARD_PROVENANCE=constructed:<谁>）。
+      默认 "unlabeled"：★ 我不给「自然发生」盖章。没见过来历就说没见过，
+      否则「我在自己造的坏世界里验过」会读成「真实世界出现过」——
+      这正是「响过」这个状态一直分不开的那两件事。
+    """
+    prov = provenance or os.environ.get("HAND_GUARD_PROVENANCE") or "unlabeled"
     rec = {"ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-           "guard": guard, "action": action, "detail": str(detail)[:200]}
+           "guard": guard, "action": action, "detail": str(detail)[:200],
+           "provenance": str(prov)[:80]}
     try:
         with open(_path(), "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -70,10 +79,13 @@ def table(records):
     """
     agg = {}
     for r in records:
-        g = agg.setdefault(r.get("guard", "?"), {"ran": 0, "refused": 0, "last_refused": None})
+        g = agg.setdefault(r.get("guard", "?"), {"ran": 0, "refused": 0, "last_refused": None,
+                                                "prov": {}})
         if r.get("action") == "refused":
             g["refused"] += 1
             g["last_refused"] = r.get("ts")
+            prov = r.get("provenance") or "unlabeled"
+            g["prov"][prov] = g["prov"].get(prov, 0) + 1
         elif r.get("action") == "ran":
             g["ran"] += 1
     rows = []
@@ -85,8 +97,16 @@ def table(records):
             verdict = "未验响过"
         else:
             verdict = "没跑过"
-        rows.append((g, v["ran"], v["refused"], v["last_refused"], verdict))
+        rows.append((g, v["ran"], v["refused"], v["last_refused"], verdict, v["prov"]))
     return rows
+
+
+def prov_split(prov):
+    """→ (构造的次数, 未标来历的次数)。已响过必须按来历拆开印：
+    同一栏里「我造的坏世界」与「不知道谁造的」数值相同，读起来是同一件事。"""
+    con = sum(n for k, n in prov.items() if k.startswith("constructed"))
+    unl = sum(n for k, n in prov.items() if not k.startswith("constructed"))
+    return con, unl
 
 
 def main():
@@ -97,9 +117,20 @@ def main():
         return 0
     print("闸台账（%s）" % _path())
     print("  %-16s %5s %5s  %-20s %s" % ("闸", "跑", "响不过", "上次响", "判定"))
-    for g, ran, ref, last, verdict in rows:
-        print("  %-16s %5d %5d  %-20s %s" % (g, ran, ref, last or "-", verdict))
-    unverified = [g for g, _, ref, _, v in rows if v == "未验响过"]
+    unlabeled_hits = []
+    for g, ran, ref, last, verdict, prov in rows:
+        con, unl = prov_split(prov)
+        tail = verdict
+        if ref:
+            tail = "%s（构造 %d / 未标来历 %d）" % (verdict, con, unl)
+            if unl:
+                unlabeled_hits.append((g, unl))
+        print("  %-16s %5d %5d  %-20s %s" % (g, ran, ref, last or "-", tail))
+    if unlabeled_hits:
+        print("  ★ 响过来历不明（不是我明确构造的）：%s" % unlabeled_hits)
+        print("    ⇒ 这可能是真实世界里的第一个自然样本，值得看一眼；也可能是我忘了标，")
+        print("      两种在账上同形——所以未标来历必须单列，不能并进「构造」。")
+    unverified = [g for g, _, ref, _, v, _ in rows if v == "未验响过"]
     if unverified:
         print("  ★ 跑过但一次没响过：%s —— 这行不是好消息，是待查清单。" % unverified)
     return 0

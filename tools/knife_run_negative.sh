@@ -26,7 +26,11 @@ echo "$out" | grep -qE "^  类数 test粒度" && echo "  类数行 有 ✓" || {
 echo "== 方向二 污染跑：必须拒绝出结论 =="
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/kit" && cp kit/mcp_server.py "$tmp/kit/" || exit 1
-out=$(PYTHONPATH="$PWD" ASSERT_TRACE_ROOT="$tmp" python3 tools/knife_run.py 2>&1); rc=$?
+# 这套坏世界是我造的，必须自报来历：否则账上「构造 2 / 未标来历 0」会跟
+# 「真实世界真出过一次」混成同一栏。★ 来历要说，不能靠读者猜这行是谁写的。
+out=$(PYTHONPATH="$PWD" ASSERT_TRACE_ROOT="$tmp" \
+      HAND_GUARD_PROVENANCE="constructed:knife_run_negative.sh" \
+      python3 tools/knife_run.py 2>&1); rc=$?
 echo "$out" | grep -q "RUN INVALID" && echo "  RUN INVALID ✓" || { echo "  没报 INVALID ✗"; fails=1; }
 if echo "$out" | grep -qE "^  类数 test粒度"; then echo "  仍然印了类数 ✗（空读数与测过同形）"; fails=1; else echo "  没印类数 ✓"; fi
 [ "$rc" -eq 9 ] && echo "  rc=9 ✓" || { echo "  rc=$rc（期望 9）✗"; fails=1; }
