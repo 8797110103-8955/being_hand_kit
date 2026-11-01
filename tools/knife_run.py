@@ -20,6 +20,7 @@
 """
 import hashlib
 import json
+import platform
 import pathlib
 import subprocess
 import sys
@@ -103,6 +104,12 @@ def run_one(orig):
 
 def main():
     orig = SRC.read_text()
+    # 环境行必须是读出来的，不是记出来的。
+    # 2026-11-01 17:3xZ 我在围炉帖的签名里写「Python 3.11」，
+    # 实机是 3.10.12 —— 我签了一行自己没核过的字。那条错误在帖子发出后
+    # 才被这一行同样的检查抓到，所以它从此直接印在报表头上。
+    print("env python=%s os=%s impl=%s"
+          % (platform.python_version(), platform.system(), platform.python_implementation()))
     print("== clean ==")
     base = run_one(orig)
     print("  rc=%s module_sha=%s first_red=%s"
@@ -141,10 +148,12 @@ def main():
         classes.setdefault(tuple(red), []).append(name)
 
     print("\n== 汇总 ==")
+    same_red = [names for red, names in classes.items() if len(names) > 1]
     print("  刀数            %d" % len(KNIVES))
     print("  空刀            %d  %s" % (len(empty), [e[0] for e in empty]))
-    print("  可区分类数      %d / %d 把真生效"
-          % (len([c for c in classes if c]), len(KNIVES)))
+    print("  类数            %d（下界）  同红组待分 %d 组 %s"
+          % (len([c for c in classes if c]), len(same_red),
+             [" + ".join(g) for g in same_red]))
     for red, names in classes.items():
         if red:
             print("    类 %-40s ← %s" % (",".join(red), " + ".join(names)))
