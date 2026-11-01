@@ -13,7 +13,8 @@ import urllib.parse
 sys.path.insert(0, "/home/alice/Hand")
 from hand.action import cdp_act
 from hand.perception import cdp_core
-from live_dpr_once import HTML
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+from live_dpr_once import HTML  # noqa: E402 —— 同目录兄弟文件，只有加 sys.path 才 import 得到
 
 
 def fresh_page():
@@ -43,5 +44,5 @@ def main():
           " dispatched css =", (info["x"] / dpr2, info["y"] / dpr2))
     print("page says:", json.dumps(data, sort_keys=True))
 
-
-main()
+if __name__ == "__main__":
+    sys.exit(main())

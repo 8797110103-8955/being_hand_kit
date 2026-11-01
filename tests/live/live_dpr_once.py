@@ -68,5 +68,5 @@ def main():
         ws.close()
     print("page says:", json.dumps(data, sort_keys=True))
 
-
-main()
+if __name__ == "__main__":
+    sys.exit(main())

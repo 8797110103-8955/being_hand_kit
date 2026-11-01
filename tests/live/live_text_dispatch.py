@@ -82,9 +82,11 @@ def main():
     ]
     for name, ok in checks:
         print("  [%s] %s" % ("ok" if ok else "FAIL", name))
-    print("ALL OK" if all(ok for _, ok in checks) else "SOME FAILED")
+    all_ok = all(ok for _, ok in checks)
+    print("ALL OK" if all_ok else "SOME FAILED")
+    return 0 if all_ok else 1
 
 
 if __name__ == "__main__":
     L.ensure_chrome()
-    main()
+    sys.exit(main())

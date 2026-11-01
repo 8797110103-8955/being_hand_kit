@@ -17,14 +17,23 @@
   这正是我给 Neuromancer 的那一刀，回旋到自己手上。扫描器自己得先过这一关。
 
 分两档（2026-11-01T21:2xZ，抄 Neuromancer 的 DANGER/WARN，因为他那条我信）：
-  洞  —— __main__ 块在场，但没有任何东西决定退出码。这是 assert_trace 那一晚，
-         必然假绿，红。
-  疑  —— 有 main() 却没有 __main__ 块。Hand 里每个 tool 都是 CLI，所以看着像洞；
-         但一个被别的工具 import 的模块本来就没有退出码。**这一档我判它红是过报
-         还是真洞，没验过**（实仓 0 例，从没打到过真材料）。
-         按「过度报警的代价不是多余，是一红就被当噪音关掉」，它单列、不红。
+  洞  —— 两条，都红：
+         a) __main__ 块在场，但没有任何东西决定退出码（assert_trace 那一晚）
+         b) 有 main()、无入口块、**却在模块顶层裸调 main()**
+            —— 这是我原以为「没有退出码」的那一档，看了实物才知道它跑得起来：
+               跑得起来、rc 恒 0（里面成不成立都不影响 $?）、且 **import 它就执行**。
+               实仓样本 ×3（tests/live/live_dpr_{once,old_ab}、live_text_dpr），
+               已加守卫。这就是 Neuromancer 说「我这边造不出来」的那个样本 ——
+               它一直在我的视野之外，因为这道扫器只 glob tools/。
+  疑  —— 有 main()、无入口块、也没有裸调 ⇒ 可能是一个被 import 的模块，本来就不该有
+         退出码。这一档我不替它决定，只列出来；它不红。
 
-退出码：0 = 没有洞（审计器的正控必须是绿的）；1 = 有洞，逐条印出来。
+★ 视野校验（2026-11-01T21:2xZ，Neuromancer 还我的一条）：扫到 0 个目标文件时
+  **报红 rc=2**，不报「0 处问题」——否则「我没扫到东西」和「我扫完干净」同形。
+  这一版视野从 tools/ 扩到 tools/ + tests/live/：**扫描面本身是可以过窄的，
+  过窄的扫描面和干净的扫描面在回执上一模一样。**
+
+退出码：0 = 没有洞；1 = 有洞，逐条印出来；2 = 视野为空，拒绝给结论。
 """
 import ast
 import pathlib
@@ -58,11 +67,27 @@ def has_exit(node):
     return False
 
 
+VIEWS = ("tools", "tests/live")
+
+
+def _bare_main_call(tree):
+    """模块顶层有没有一句裸 main()（没有 __main__ 守卫）。"""
+    for n in tree.body:
+        if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call):
+            if ast.unparse(n.value.func) == "main":
+                return True
+    return False
+
+
 def scan(root):
-    """→ (检查数, 洞列表[(文件名, 原因)])。疑不在这里 —— 它不是洞。"""
+    """→ (看得见的文件数, 检查数, 洞列表, 疑列表)。"""
     root = pathlib.Path(root)
-    problems, suspects, checked = [], [], 0
-    for p in sorted((root / "tools").glob("*.py")):
+    problems, suspects, checked, seen = [], [], 0, 0
+    files = []
+    for v in VIEWS:
+        files.extend(sorted((root / v).glob("*.py")))
+    for p in files:
+        seen += 1
         try:
             tree = ast.parse(p.read_text())
         except SyntaxError as e:
@@ -75,19 +100,27 @@ def scan(root):
             continue
         checked += 1
         if entry is None:
-            suspects.append((p.name, "有 main() 但没有 __main__ 入口块，"
-                                     "rc 只能靠 import 它的人去传"))
+            if _bare_main_call(tree):
+                problems.append((p.name, "顶层裸调 main()：跑得起来，但 rc 恒 0，"
+                                         "而且 import 它就执行"))
+            else:
+                suspects.append((p.name, "有 main() 但没有 __main__ 入口块，"
+                                         "也没有裸调 —— 可能本就该被 import"))
         elif not has_exit(entry):
             problems.append((p.name, "__main__ 块调了东西但不决定退出码 —— "
                                      "它的 rc 走哪条路出去？"))
-    return checked, problems, suspects
+    return seen, checked, problems, suspects
 
 
 def main(argv):
     root = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path(__file__).parent.parent
-    checked, problems, suspects = scan(root)
-    print("扫了 %d 个有 main() 的 tool，洞 %d 条，疑 %d 条"
-          % (checked, len(problems), len(suspects)))
+    seen, checked, problems, suspects = scan(root)
+    if seen == 0:
+        print("!! REFUSED 视野为空：%s 下一个 .py 都没扫到 —— 这是「没扫到东西」，"
+              "不是「扫完干净」" % (root,))
+        return 2
+    print("看了 %d 个文件（%s），其中 %d 个有 main()，洞 %d 条，疑 %d 条"
+          % (seen, " + ".join(VIEWS), checked, len(problems), len(suspects)))
     for name, why in problems:
         print("  !! 洞 %-25s %s" % (name, why))
     for name, why in suspects:
@@ -95,6 +128,7 @@ def main(argv):
     if problems:
         return 1
     print("  所有 main() 的 rc 都在入口处被兑现（sys.exit / SystemExit）")
+    print("  ★ 这句只在我刚印的「看了 N 个文件」之上才成立 —— 分母是视野，不是结论")
     return 0
 
 
