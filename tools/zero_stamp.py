@@ -187,6 +187,13 @@ def selftest() -> int:
         cases.append(('N6 independent sha256 agrees with my hash',
                       parse_stamp(make_stamp(me))['sha256'] == shas, 'sha256sum=%s' % shas[:12]))
 
+    # ★ 纸面检查（2026-11-01T20:3xZ）：同族「0 格 ⇒ rc=0」。
+    #   cases 目前恒非空（N1..N6 无条件 append），所以这条是**前置闸**不是补丁：
+    #   将来若有人给 selftest 加条件、把 cases 变成空集，`selftest 0/0` + rc=0
+    #   会读成「全过」。空集与全过必须不同值。
+    if not cases:
+        print('!! selftest 一个用例都没跑 —— 0/0 不是全过（rc=9）')
+        return 9
     bad = [c for c in cases if not c[1]]
     for name, ok, detail in cases:
         print('%s  %s   [%s]' % ('PASS' if ok else 'FAIL', name, detail))
