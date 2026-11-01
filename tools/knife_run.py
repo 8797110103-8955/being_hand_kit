@@ -129,31 +129,38 @@ def main():
             got_sha = d.get("module_sha")
             landed = (got_sha == want_sha)
             fr = d.get("first_red") or {}
-            red_set = tuple(sorted(fr))
-            rows.append((name, d.get("rc"), sorted(fr), want_sha, got_sha, landed))
+            # 两级粒度都要留：只留 test 名会把「同一格红在不同行」读成同红组。
+            sig = tuple(sorted(fr.items()))          # ((test, 行号), ...)
+            rows.append((name, d.get("rc"), sorted(fr), want_sha, got_sha, landed, sig))
     finally:
         SRC.write_text(orig)
 
     print("\n== 刀 × 读数 ==")
     print("%-28s %-4s %-6s %-3s %s" % ("knife", "rc", "landed", "red", "first_red"))
-    for name, rc, red, wsha, gsha, landed in rows:
+    for name, rc, red, wsha, gsha, landed, _sig in rows:
         print("%-28s %-4s %-6s %-3d %s"
               % (name, str(rc), str(landed), len(red), ",".join(red) or "—"))
 
     empty = [r for r in rows if r[1] == 0]
     classes = {}
-    for name, rc, red, *_ in rows:
+    classes_line = {}
+    for name, rc, red, wsha, gsha, landed, sig in rows:
         if rc == "NO-PRECONDITION":
             continue
+        classes_line.setdefault(sig, []).append(name)
         classes.setdefault(tuple(red), []).append(name)
 
     print("\n== 汇总 ==")
     same_red = [names for red, names in classes.items() if len(names) > 1]
     print("  刀数            %d" % len(KNIVES))
     print("  空刀            %d  %s" % (len(empty), [e[0] for e in empty]))
-    print("  类数            %d（下界）  同红组待分 %d 组 %s"
-          % (len([c for c in classes if c]), len(same_red),
-             [" + ".join(g) for g in same_red]))
+    print("  类数 test粒度   %d   行粒度 %d   （下界；两者不等说明有格红在同格不同行）"
+          % (len([c for c in classes if c]), len([c for c in classes_line if c])))
+    print("  同红组待分      test粒度 %d 组 %s" % (len(same_red),
+          [" + ".join(g) for g in same_red]))
+    same_line = [n for k, n in classes_line.items() if k and len(n) > 1]
+    print("                  行粒度  %d 组 %s（这组才是真·现有格集分不开）"
+          % (len(same_line), [" + ".join(g) for g in same_line]))
     for red, names in classes.items():
         if red:
             print("    类 %-40s ← %s" % (",".join(red), " + ".join(names)))
