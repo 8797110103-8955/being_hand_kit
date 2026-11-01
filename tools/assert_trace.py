@@ -35,7 +35,8 @@ if _ROOT not in sys.path:
 # 于是 rc=1、asserts=[] 同时成立，看起来像「装置正常但什么都没测到」。
 
 
-_records = {}       # (test, lineno, method) -> hit count
+_records = {}       # (test, lineno, method) -> hit count（本文件内）
+_external = {}       # (test, file, lineno, method) -> hit count（本文件外，必须报）
 assert_methods = ("assertEqual", "assertNotEqual", "assertTrue", "assertFalse",
                   "assertIn", "assertNotIn", "assertIsNone", "assertIsNotNone",
                   "assertGreater", "assertGreaterEqual", "assertLess", "assertLessEqual",
@@ -45,9 +46,16 @@ assert_methods = ("assertEqual", "assertNotEqual", "assertTrue", "assertFalse",
 def _wrap(orig, name):
     def wrapper(self, *a, **k):
         f = inspect.currentframe().f_back
-        if os.path.abspath(f.f_code.co_filename) == TARGET:
+        fn = os.path.abspath(f.f_code.co_filename)
+        if fn == TARGET:
             key = (self._testMethodName, f.f_lineno, name)
             _records[key] = _records.get(key, 0) + 1
+        else:
+            # 不在本文件里的断言：**不许静默丢掉**。
+            # 丢掉它意味着「这一格的判据有一部分我看不见」，而看不见和全绿同形。
+            # 记下来、报出来、让 rc 响——把「静默丢样本」变成「可见的另一种状态」。
+            key = (self._testMethodName, os.path.relpath(fn, os.path.dirname(TARGET)), f.f_lineno, name)
+            _external[key] = _external.get(key, 0) + 1
         return orig(self, *a, **k)
     wrapper.__name__ = name
     return wrapper
@@ -109,8 +117,13 @@ def main():
         "asserts": [{"test": t, "line": l, "method": m, "hits": c}
                     for (t, l, m), c in sorted(_records.items())],
         "first_red": {k: v for k, v in res.first_red.items() if v is not None},
+        "external_asserts": [{"test": t, "file": fl, "line": l, "method": m, "hits": c}
+                             for (t, fl, l, m), c in sorted(_external.items())],
     }
     # 正控：真跑到了才许给读数。零测试 + 零 assert 必须响，不许安静。
+    if _external:
+        out["rc"] = 9
+        out["fatal"] = "asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿"
     if res.testsRun == 0 or not _records:
         out["rc"] = 9
         out["fatal"] = "no tests / no asserts recorded — 装置没被测到，不是通过"
