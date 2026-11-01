@@ -49,8 +49,20 @@ class InvalidReasonsTest(unittest.TestCase):
         self.assertTrue(r and "没解析" in r[0], r)
 
     def test_not_landed_knife_is_refused(self):
+        """落点错必须被拒。2026-11-01T21:0xZ 措辞从「没落在我要的位置」拆成
+        「落在别处」——原来那一条把三件事（没拨到 / 落在别处 / 没解析）合并了。
+        断言跟着改，但意图不变：这一格仍要红。"""
         r = K.invalid_reasons(self.base(), [row("K1", got="00000000", landed=False)], ORIG)
-        self.assertTrue(r and "位置" in r[0], r)
+        self.assertTrue(r and "落在别处" in r[0], r)
+        self.assertFalse(any("没拨到" in x for x in r), "落点错误被印成了前置不匹配")
+
+    def test_unapplied_knife_is_not_reported_as_landed(self):
+        """刀根本没拨到东西 ⇒ 理由写「没拨到」，而且不许混进「落在别处」。
+        两件事在回执上同形，就是抹平：一个是我的刀集不全（没有分母），
+        一个是我写的那份 ≠ 它跑的那份。"""
+        r = K.invalid_reasons(self.base(), [row("K1", rc="NO-PRECONDITION", got="", landed="")], ORIG)
+        self.assertTrue(r and "没拨到" in r[0], r)
+        self.assertFalse(any("落在别处" in x for x in r), r)
 
     def test_five_endings_have_five_distinct_receipts(self):
         """值域检查：五种结局必须印出五句不同的话。两句相同 ⇒ 那格在抹平。"""

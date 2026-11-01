@@ -45,8 +45,15 @@ import pathlib
 import subprocess
 import sys
 
-HERE = pathlib.Path(__file__).resolve().parent.parent
+# 两个环境变量把「被测谁」「用哪把尺子」从硬编码里拿出来 —— 和 assert_trace
+# 的那三个变量同一个理由：不给自己留一个驱动入口，自检就只能靠纸面 grep，
+# 而纸面 grep 照不到进程 rc（围炉 #34 seq 4428→4429，Neuromancer 的位置轴）。
+#   KNIFE_RUN_ROOT    仓库根（默认本文件上一级）
+#   KNIFE_RUN_TRACER  尺子脚本（默认 tools/assert_trace.py，相对 ROOT 或绝对路径）
+HERE = pathlib.Path(os.environ.get("KNIFE_RUN_ROOT") or
+                    pathlib.Path(__file__).resolve().parent.parent).resolve()
 SRC = HERE / "kit" / "mcp_server.py"
+TRACER = os.environ.get("KNIFE_RUN_TRACER") or "tools/assert_trace.py"
 
 KNIVES = {
     # —— _code_drift ——
@@ -127,9 +134,19 @@ def invalid_reasons(base, rows, orig):
     unparsed = [r[0] for r in rows if r[1] in ("UNPARSED", "CRASH")]
     if unparsed:
         bad.append("刀读数没解析出来 %d/%d %s" % (len(unparsed), len(rows), unparsed))
-    not_landed = [r[0] for r in rows if r[5] is not True]
+    # ★ 2026-11-01T21:0xZ：这三件事原来被合并成一句「没落在我要的位置」——
+    #   前置不匹配（这把刀根本没拨到东西）／落点错（拨到了别人那份）／读数没解析
+    #   是两个完全不同的结局，合并就是抹平。分开之后分母也才有意义：
+    #   有刀没拨到东西 ⇒ 刀集不全，本轮的可区分类数不许当结论。
+    no_pre = [r[0] for r in rows if r[1] == "NO-PRECONDITION"]
+    if no_pre:
+        bad.append("刀根本没拨到东西 %d/%d %s（刀集不全，没有分母）"
+                   % (len(no_pre), len(rows), no_pre))
+    not_landed = [r[0] for r in rows
+                  if r[1] not in ("UNPARSED", "CRASH", "NO-PRECONDITION") and r[5] is not True]
     if not_landed:
-        bad.append("刀没落在我要的位置 %d/%d %s" % (len(not_landed), len(rows), not_landed))
+        bad.append("刀落在别处 %d/%d %s（我写的那份 ≠ 它跑的那份）"
+                   % (len(not_landed), len(rows), not_landed))
     return bad
 
 
@@ -138,7 +155,7 @@ def sha8(text):
 
 
 def run_one(orig):
-    r = subprocess.run([sys.executable, "tools/assert_trace.py"],
+    r = subprocess.run([sys.executable, TRACER],
                        cwd=HERE, capture_output=True, text=True)
     line = (r.stdout or "").strip().splitlines()
     if not line:

@@ -1,5 +1,17 @@
-{"ts": "2026-11-01T12:15:54Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
-{"ts": "2026-11-01T12:15:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
-{"ts": "2026-11-01T12:15:54Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
-{"ts": "2026-11-01T12:15:54Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
-{"ts": "2026-11-01T12:15:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:26Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:26Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:26Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:26Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:26Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T13:04:32Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:32Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:33Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:33Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:33Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:34Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:34Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:35Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:35Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:36Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:36Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T13:04:36Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
