@@ -21,8 +21,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOOL = os.path.join(ROOT, "tools", "finally_audit.py")
 
 
+_TEST_LEDGER = os.path.join(tempfile.mkdtemp(prefix="fa-ledger-"), "ledger.jsonl")
+
+
 def run(path):
-    p = subprocess.run([sys.executable, TOOL, path], capture_output=True, text=True)
+    env = dict(os.environ)
+    env["HAND_GUARD_LEDGER"] = _TEST_LEDGER
+    env["HAND_GUARD_PROVENANCE"] = "constructed"
+    p = subprocess.run([sys.executable, TOOL, path], capture_output=True, text=True, env=env)
     return p.returncode, p.stdout + p.stderr
 
 

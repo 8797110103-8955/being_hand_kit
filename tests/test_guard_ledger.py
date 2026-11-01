@@ -38,12 +38,23 @@ class GuardLedgerTest(_LedgerCase):
         L.note("g", "ran", "clean")
         L.note("g", "ran", "clean")
         rows = L.table(L.load(self.p))
-        self.assertEqual(rows, [("g", 2, 0, None, "未验响过", {})])
+        # 元组形状 (guard, total, ran, refused, last, verdict, prov)
+        self.assertEqual(rows, [("g", 2, 2, 0, None, "未验响过", {})])
+
+    def test_crash_every_time_is_not_rendered_as_zero_runs(self):
+        """★ 元组只是形状；这一格问的是语义：每次调用都崩 ⇒ total 非 0、ran 为 0。
+
+        旧版「跑」只数 action=="ran"，于是崩溃闸读成「跑 0 响 1」——而「跑 0」
+        的字面意思是「从没跑过」。崩溃与没跑在同一个读数上撞了。
+        """
+        L.note("g", "refused", "EXC=FileNotFoundError")
+        g, total, ran, ref, last, verdict, prov = L.table(L.load(self.p))[0]
+        self.assertEqual((total, ran, ref), (1, 0, 1))
 
     def test_fired_records_last_time(self):
         L.note("g", "ran", "")
         L.note("g", "refused", "基线读数没解析出来")
-        g, ran, ref, last, verdict, prov = L.table(L.load(self.p))[0]
+        g, total, ran, ref, last, verdict, prov = L.table(L.load(self.p))[0]
         self.assertEqual((ran, ref, verdict), (1, 1, "已响过"))
         self.assertIsNotNone(last)
         self.assertRegex(last, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -54,8 +65,8 @@ class GuardLedgerTest(_LedgerCase):
         L.note("a", "ran", "")
         L.note("b", "refused", "x")
         rows = {r[0]: r for r in L.table(L.load(self.p))}
-        self.assertEqual(rows["a"][4], "未验响过")
-        self.assertEqual(rows["b"][4], "已响过")
+        self.assertEqual(rows["a"][5], "未验响过")
+        self.assertEqual(rows["b"][5], "已响过")
 
     def test_write_failure_does_not_raise(self):
         """写台账失败不许让闸崩 —— 记账是旁路，不是被判物。"""
@@ -71,7 +82,7 @@ class ProvenanceTest(_LedgerCase):
         os.environ["HAND_GUARD_PROVENANCE"] = "constructed:shell"
         L.note("g", "refused", "外壳造的第二发")
         os.environ.pop("HAND_GUARD_PROVENANCE")
-        prov = L.table(L.load(self.p))[0][5]
+        prov = L.table(L.load(self.p))[0][6]
         self.assertEqual(L.prov_split(prov), (1, 1))
 
     def test_missing_provenance_is_not_labelled_natural(self):
@@ -93,8 +104,8 @@ class ProvenanceTest(_LedgerCase):
         L.note("h", "refused", "我造的")
         os.environ.pop("HAND_GUARD_PROVENANCE")
         rows = {r[0]: r for r in L.table(L.load(self.p))}
-        self.assertEqual(L.prov_split(rows["g"][5]), (0, 1))
-        self.assertEqual(L.prov_split(rows["h"][5]), (1, 0))
+        self.assertEqual(L.prov_split(rows["g"][6]), (0, 1))
+        self.assertEqual(L.prov_split(rows["h"][6]), (1, 0))
 
 
 class ReadSideReconcileTest(_LedgerCase):
@@ -229,6 +240,44 @@ class WiringIsATestNotAClaimTest(unittest.TestCase):
             src = f.read()
         self.assertNotIn("def guard_note(*a, **k):\n        pass", src)
         self.assertIn("台账未接线", src)
+
+
+class ExitIsNotReturnTest(_LedgerCase):
+    """出口不是 return，是「进程结束」——崩了也必须留一行。
+
+    2026-11-01T21:0xZ 实测：run_and_note 第一版只包返回值，roster_extract 在
+    文件不存在时**抛异常**退出 ⇒ 表里一行都没有 ⇒ 崩溃与「根本没跑」同形。
+    """
+
+    def test_returning_zero_is_ran(self):
+        rc = L.run_and_note("g", lambda: 0)
+        self.assertEqual(rc, 0)
+        rows = L.load(self.p)
+        self.assertEqual(rows[-1]["action"], "ran")
+
+    def test_returning_two_is_refused_with_its_rc(self):
+        """refused 也要带值：rc=9（空结果）与 rc=2（缺第二读数）表上同形，只有 rc 分得开。"""
+        L.run_and_note("g", lambda: 2)
+        row = L.load(self.p)[-1]
+        self.assertEqual(row["action"], "refused")
+        self.assertIn("rc=2", row["detail"])
+
+    def test_exception_still_leaves_a_row(self):
+        def boom():
+            raise FileNotFoundError("nope")
+        with self.assertRaises(FileNotFoundError):
+            L.run_and_note("g", boom)
+        rows = L.load(self.p)
+        self.assertEqual(len(rows), 1, "崩溃没留行 ⇒ 崩溃与没跑同形")
+        self.assertEqual(rows[0]["action"], "refused")
+        self.assertIn("EXC=FileNotFoundError", rows[0]["detail"])
+
+    def test_sys_exit_is_an_exit_not_a_crash(self):
+        def bail():
+            raise SystemExit(3)
+        rc = L.run_and_note("g", bail)
+        self.assertEqual(rc, 3)
+        self.assertIn("rc=3(exit)", L.load(self.p)[-1]["detail"])
 
 
 if __name__ == "__main__":

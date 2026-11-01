@@ -21,9 +21,16 @@ TOOL = os.path.join(ROOT, "tools", "zero_stamp.py")
 RC_SAME, RC_UNPARSABLE, RC_CHANGED, RC_MISSING = 0, 2, 4, 5
 
 
+_TEST_LEDGER = os.path.join(tempfile.mkdtemp(prefix="zs-ledger-"), "ledger.jsonl")
+
+
 def run(*args):
+    # 测试的响写进自己的台账并标「构造」——不混进仓里的真账。
+    env = dict(os.environ)
+    env["HAND_GUARD_LEDGER"] = _TEST_LEDGER
+    env["HAND_GUARD_PROVENANCE"] = "constructed"
     p = subprocess.run([sys.executable, TOOL] + list(args),
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, env=env)
     return p.returncode, p.stdout + p.stderr
 
 

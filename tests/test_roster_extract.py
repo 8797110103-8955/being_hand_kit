@@ -23,6 +23,7 @@ import sys
 import tempfile
 import unittest
 
+_TEST_LEDGER = os.path.join(tempfile.mkdtemp(prefix="roster-ledger-"), "ledger.jsonl")
 TOOL = os.environ.get("ROSTER_TOOL") or os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "tools",
@@ -66,9 +67,15 @@ def run_tool(raw_text):
     try:
         with os.fdopen(fd, "w") as fh:
             fh.write(raw_text)
+        # ★ 2026-11-01T21:1xZ：跑工具会写台账。测试必须写进**自己的**台账并
+        #   标明「构造」——否则测试的响混进仓里的真账（同族：10-27 隔离端口
+        #   把「我起的浏览器」写进真机 owner 文件）。隔离要默认，不靠记性。
+        env = dict(os.environ)
+        env["HAND_GUARD_LEDGER"] = _TEST_LEDGER
+        env["HAND_GUARD_PROVENANCE"] = "constructed"
         p = subprocess.run(
             [sys.executable, TOOL, path],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, timeout=120, env=env,
         )
         return p.returncode, p.stdout + p.stderr
     finally:

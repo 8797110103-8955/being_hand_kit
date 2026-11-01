@@ -161,7 +161,12 @@ def load(path=None):
 
 
 def table(records):
-    """→ [(guard, ran, refused, last_refused, verdict)]
+    """→ [(guard, total, ran, refused, last_refused, verdict, prov)]
+
+    ★ 2026-11-01T21:2xZ 加 total：原先「跑」只数 action=="ran"，
+    于是**每次调用都崩**的闸在表上读成「跑 0 响 1」——而「跑 0」的字面意思是
+    「从没跑过」。崩溃与没跑在同一个读数上又撞了一次（今晚第五次）。
+    total = ran + refused，是「这闸被叫过几次」；ran 单独作「放行」列。
 
     verdict 只有三态，而且**「未验响过」不许并进「已证门」**：
       已响过      refused > 0
@@ -173,7 +178,8 @@ def table(records):
         if str(r.get("guard", "")).startswith("_"):
             continue            # 台账自述行不是闸，单独印
         g = agg.setdefault(r.get("guard", "?"), {"ran": 0, "refused": 0, "last_refused": None,
-                                                "prov": {}})
+                                                "prov": {}, "total": 0})
+        g["total"] += 1
         if r.get("action") == "refused":
             g["refused"] += 1
             g["last_refused"] = r.get("ts")
@@ -190,7 +196,8 @@ def table(records):
             verdict = "未验响过"
         else:
             verdict = "没跑过"
-        rows.append((g, v["ran"], v["refused"], v["last_refused"], verdict, v["prov"]))
+        rows.append((g, v["total"], v["ran"], v["refused"], v["last_refused"], verdict,
+                     v["prov"]))
     return rows
 
 
@@ -230,21 +237,23 @@ def main():
               % len(_WRITE_FAILURES))
         for w in _WRITE_FAILURES[:3]:
             print("     %s" % w)
-    print("  %-16s %5s %5s  %-20s %s" % ("闸", "跑", "响不过", "上次响", "判定"))
+    print("  %-16s %5s %5s %5s  %-20s %s"
+          % ("闸", "总次", "放行", "响", "上次响", "判定"))
     unlabeled_hits = []
-    for g, ran, ref, last, verdict, prov in rows:
+    for g, total, ran, ref, last, verdict, prov in rows:
         con, unl = prov_split(prov)
         tail = verdict
         if ref:
             tail = "%s（构造 %d / 未标来历 %d）" % (verdict, con, unl)
             if unl:
                 unlabeled_hits.append((g, unl))
-        print("  %-16s %5d %5d  %-20s %s" % (g, ran, ref, last or "-", tail))
+        print("  %-16s %5d %5d %5d  %-20s %s"
+              % (g, total, ran, ref, last or "-", tail))
     if unlabeled_hits:
         print("  ★ 响过来历不明（不是我明确构造的）：%s" % unlabeled_hits)
         print("    ⇒ 这可能是真实世界里的第一个自然样本，值得看一眼；也可能是我忘了标，")
         print("      两种在账上同形——所以未标来历必须单列，不能并进「构造」。")
-    unverified = [g for g, _, ref, _, v, _ in rows if v == "未验响过"]
+    unverified = [r[0] for r in rows if r[5] == "未验响过"]
     if unverified:
         print("  ★ 跑过但一次没响过：%s —— 这行不是好消息，是待查清单。" % unverified)
     return 0
@@ -252,3 +261,39 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def run_and_note(guard, fn, *args, **kwargs):
+    """在**出口**记账，不在每个 return 记。
+
+    为什么：一道装置有几个出口会随它长，今天 3 个明天 5 个，逐个挂 note 一定会漏
+    （今晚 knife_run 的教训：接线漏了，表上只是少一行，不报错）。
+    出口只有一个 ⇒ 这一行同时覆盖 clean 与所有拒绝路径，按 rc 判 ran/refused。
+
+    detail 里写 rc，是为了让「响」带上自己的值：refused rc=9（空结果）与
+    refused rc=2（缺第二读数）在表上长得一样，只有 rc 能分开。
+    """
+    # ★ 崩了也要留一行（2026-11-01T21:0xZ 实测）：第一版只包了返回值，
+    #   而 roster_extract 在文件不存在时是**抛异常**退出——于是崩溃在表上
+    #   和「根本没跑」完全同形，我刚跑的那一发一行都没有。
+    #   出口不是 return，是「进程结束」。异常也必须是一条 refused。
+    try:
+        rc = fn(*args, **kwargs)
+        action, detail = ("ran" if rc == 0 else "refused"), "rc=%d" % rc
+    except SystemExit as e:                    # sys.exit(N) 也算出口
+        code = e.code if isinstance(e.code, int) else 1
+        rc, action, detail = code, ("ran" if code == 0 else "refused"), "rc=%d(exit)" % code
+    except BaseException as e:                 # noqa: BLE001
+        rc, action, detail = -1, "refused", "EXC=%s" % type(e).__name__
+        _note_quiet(guard, action, detail)
+        raise
+    _note_quiet(guard, action, detail)
+    return rc
+
+
+def _note_quiet(guard, action, detail):
+    try:
+        note(guard, action, detail)
+    except Exception as e:  # noqa: BLE001
+        print("!! 台账未接线（这一发不会进账）: %s: %s" % (type(e).__name__, e),
+              file=sys.stderr)

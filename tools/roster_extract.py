@@ -39,6 +39,7 @@
 一致性只证明我没改错自己——所以两数必须来自不同来源（runner 打的 vs 我解析的）。
 """
 import re
+import os
 import sys
 import collections
 
@@ -166,8 +167,19 @@ def main(path):
     return 0
 
 
+# ★ 接线（2026-11-01T21:0xZ）：只在**出口**记一笔，不在每个 return 记——
+#   出口只有一个，return 会随装置长大而变多。表上多一行「roster_extract」。
 if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        from guard_ledger import run_and_note as _run_and_note
+    except Exception as _e:      # noqa: BLE001
+        def _run_and_note(_g, _fn, *a, **k):
+            print("!! 台账未接线（这一发不会进账）: %s: %s"
+                  % (type(_e).__name__, _e), file=sys.stderr)
+            return _fn(*a, **k)
+
     if len(sys.argv) != 2:
         print(__doc__)
         sys.exit(2)
-    sys.exit(main(sys.argv[1]))
+    sys.exit(_run_and_note("roster_extract", main, sys.argv[1]))
