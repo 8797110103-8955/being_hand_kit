@@ -113,18 +113,30 @@ class TestCodeDrift(unittest.TestCase):
         for k in list(loaded)[:5]:
             self.assertFalse(k.startswith(".."), f"相对路径跑出 root 了: {k}")
 
-    # 8 loaded 与 changed 的交集要真能算出来：本进程已加载的文件被改 ⇒ 必须进 hot
+    # 8 走真出口：health() 里的那一行给的是交集，不是任何一侧
     #
-    #   ⚠ 这一格有已知缺陷（2026-11-01，Neuromancer 4329 §三 指出）：它自己算了一遍
-    #   交集，而且把 before 伪造成「全部脏」，于是 changed 退化成 loaded 的镜像。
-    #   实测：对 _hot_paths 造的两把刀（返回 changed / 返回 loaded）都打不红它。
-    #   它只够证明「两个集合的键形状一致」，不再被当作交集逻辑的护栏——那是格 9。
-    def test_changed_and_loaded_intersect(self):
-        loaded = M._loaded_py()
-        self.assertTrue(loaded)
-        start = {k: "00000000" for k in loaded}
-        hot = [k for k in loaded if M._code_snapshot().get(k) != start[k]]
-        self.assertIn("kit/mcp_server.py", hot)
+    #   这一格在 16:0xZ 之前是坏的（Neuromancer 4329 §三 指出）：它自己算了一遍
+    #   交集，所以任何改交集的刀都碰不到它。刀矩阵实测：它与格 7 结构性不可分
+    #   ——能红它的刀必须先弄坏 _loaded_py/_code_snapshot，而那也必然红格 7。
+    #   现在改喂构造集合给真出口，两个字段分别断言：
+    #     loaded=1 打红「给了某一侧的个数」，files=[b] 打红「给了某一侧的文件」。
+    #   两个变异红在不同的 assert 上 ⇒ 这一格能指「错在哪一边」，合成集合格 9 不能。
+    def test_health_reports_the_intersection_not_the_left_side(self):
+        orig_d, orig_l = M._code_drift, M._loaded_py
+        #   changed 的首元素刻意不是交集里的那个：否则 _ch[:1] 这种错法
+        #   会与真交集重合，一个病在这个样本上长得和正确一模一样。
+        M._code_drift = lambda *a, **k: (["hand/c.py", "hand/b.py"], [], [])
+        M._loaded_py = lambda *a, **k: {"hand/a.py", "hand/b.py"}
+        try:
+            out = M.health()
+        finally:
+            M._code_drift, M._loaded_py = orig_d, orig_l
+        self.assertIn("code_drift", out)
+        self.assertEqual(out["code_drift"]["changed"], 2)
+        self.assertEqual(out["code_drift"]["loaded"], 1,
+                         "loaded 是交集的大小：给 2 说明拿的是 changed 或 loaded 全集")
+        self.assertEqual(out["code_drift"]["files"], ["hand/b.py"],
+                         "files 必须是交集：出现 c 说明拿了 changed，出现 a 说明拿了 loaded")
 
     # 9 交集本身必须是交集：两侧都不退化，且结果既不等于 changed 也不等于 loaded
     #    样本：loaded = {a, b}，changed = {b, c}  ⇒ hot 只能是 [b]
