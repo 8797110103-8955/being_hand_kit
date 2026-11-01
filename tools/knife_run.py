@@ -23,6 +23,7 @@ import json
 import os
 import platform
 import sys
+import tempfile
 
 # ★ 2026-11-01T20:1xZ 修：这里原来是一个**静默退化的兜底**——
 #   直接跑 `python3 tools/knife_run.py` 时 tools 不在 sys.path 上，
@@ -254,7 +255,8 @@ def sha8(text):
 
 def run_one(orig):
     r = subprocess.run([sys.executable, TRACER],
-                       cwd=HERE, capture_output=True, text=True)
+                       cwd=HERE, capture_output=True, text=True,
+                       env=tracer_env())
     line = (r.stdout or "").strip().splitlines()
     if not line:
         return {"rc": "CRASH", "stderr": (r.stderr or "")[-300:]}
@@ -262,6 +264,27 @@ def run_one(orig):
         return json.loads(line[-1])
     except Exception:
         return {"rc": "UNPARSED", "raw": line[-1][:200]}
+
+
+def tracer_env():
+    """给刀跑的子进程一个**全新的字节码缓存目录**。
+
+    为什么要有这个（2026-11-01T23:0xZ，围炉 #34 seq 4465 §一 之后）：
+    变异表的形状天然踩 CPython 的 pyc 有效期判据 —— 改源文件、立刻跑。
+    而 TIMESTAMP 型 pyc（flags=0，本仓 172 支全是这一型）只校验
+    (mtime 整秒, size) **两个**字段：同长度变异 + 落在同一整秒 ⇒ 吃到
+    旧字节码，改了的源码根本没跑。
+
+    实测（不是推理）：/tmp/pycrace 里 20 次「写基线→跑→同秒写同长变异→跑」，
+    **19 次吃到旧码**。本仓 10 把刀里有 2 把（K2/K9）的 old/new 同字节长度。
+
+    `-B` 挡不住：它只拦写、不拦读（实测 `python3 -B` 仍印旧码）。
+    唯一无条件挡住的是把缓存目录换成一个空目录 —— 那里没有旧 pyc 可吃。
+    """
+    d = tempfile.mkdtemp(prefix="knife-pycache-")
+    env = dict(os.environ)
+    env["PYTHONPYCACHEPREFIX"] = d
+    return env
 
 
 def main():

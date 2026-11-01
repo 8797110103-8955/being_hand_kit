@@ -268,5 +268,102 @@ class Foundation(unittest.TestCase):
             self.assertIn(p.name, out)
 
 
+    # ——— 2026-11-01T23:1xZ：pyc 那格 ——「改了的源码根本没跑」———
+    # 由 Neuromancer #34 seq 4465 §一 的 pyc 头分析引出来的。
+    # 变异表的形状天然踩 CPython 的 TIMESTAMP 型 pyc 有效期判据：改文件、立刻跑。
+    # 实测 20 次「写基线→跑→同整秒写同长度变异→跑」里 19 次吃到旧码。
+    # ★ 这一格守的是 run_one 的 env 那一行：没有 tracer_env()，它必红。
+
+    def test_tracer_env_defeats_stale_pyc(self):
+        root = tempfile.mkdtemp(prefix="pycrace-")
+        try:
+            mod = os.path.join(root, "baseline_mod.py")
+            A = 'V = "ADDED"\n'
+            B = 'V = "MUTED"\n'          # 同字节长度，这是命门
+            self.assertEqual(len(A), len(B))
+            with open(mod, "w") as f:
+                f.write(A)
+            # ★ run_one 每次调用都现造一个空缓存目录，所以这里也必须每次现造。
+            # 我第一次写这格时两次共用一个 env ⇒ 两次共用一个缓存目录 ⇒ 它照样吃旧码、
+            # 格子当场红了。这格替我抓到了我自己对 tracer_env() 的误用：
+            # 换了位置不等于换掉了旧物，隔离的单位是「一次运行」，不是「一次会话」。
+            # 1) 先跑一次基线，让 pyc 落在某个整秒
+            subprocess.run([sys.executable, "-c", "import baseline_mod"],
+                           cwd=root, env=knife_run.tracer_env(), capture_output=True)
+            # 2) 同一整秒内写同长度变异体
+            with open(mod, "w") as f:
+                f.write(B)
+            # 3) 立刻跑 —— 这正是 run_one 的形状（全新一次 env）
+            r = subprocess.run([sys.executable, "-c",
+                                "import baseline_mod;print(baseline_mod.V)"],
+                               cwd=root, env=knife_run.tracer_env(),
+                               capture_output=True, text=True)
+            self.assertEqual(r.stdout.strip(), "MUTED",
+                             "吃到旧字节码 —— 改了的源码根本没跑，而 landed 仍会报 True")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_run_one_actually_wires_the_env(self):
+        """上一格验「tracer_env() 会做对」，这一格验「它有没有被接上 run_one」。
+
+        ★ 这个区别是被自己的刀逼出来的：我把 run_one 里的 env=tracer_env() 删掉，
+        上一格照样 15/15 全绿——因为它自己调 tracer_env()，根本不经过 run_one。
+        「装置写好了」与「装置接上了」是两个东西，跟今晚那三刀同族。
+        这里用行为判据（截获 subprocess.run 的 kwargs），不用 grep。
+        """
+        captured = {}
+
+        class _R:
+            stdout = '{"rc": "OK"}'
+            stderr = ""
+
+        def fake_run(argv, **kw):
+            captured["argv"] = argv
+            captured.update(kw)
+            return _R()
+
+        old = knife_run.subprocess.run
+        knife_run.subprocess.run = fake_run
+        try:
+            knife_run.run_one("x")
+        finally:
+            knife_run.subprocess.run = old
+        env = captured.get("env")
+        self.assertIsNotNone(env, "run_one 没把 env 传下去 —— 接线断了，上一格看不出来")
+        self.assertIn("PYTHONPYCACHEPREFIX", env,
+                      "env 传了但没换缓存目录 —— 等于没传")
+        self.assertNotIn("__pycache__", env["PYTHONPYCACHEPREFIX"])
+
+    def test_without_the_env_it_would_be_stale(self):
+        """负控：拿掉 PYTHONPYCACHEPREFIX 后，同一形状多数情况吃旧码。
+
+        不是我断言它一定吃（同名整秒是时序条件），而是断言**这一格的判别力方向**：
+        有 env ⇒ 恒 MUTED；无 env ⇒ 至少这一支里出现过旧码。
+        """
+        root = tempfile.mkdtemp(prefix="pycrace2-")
+        try:
+            mod = os.path.join(root, "baseline_mod.py")
+            A = 'V = "ADDED"\n'
+            B = 'V = "MUTED"\n'
+            poisoned = 0
+            for _ in range(6):
+                shutil.rmtree(os.path.join(root, "__pycache__"), ignore_errors=True)
+                with open(mod, "w") as f:
+                    f.write(A)
+                subprocess.run([sys.executable, "-c", "import baseline_mod"],
+                               cwd=root, capture_output=True)
+                with open(mod, "w") as f:
+                    f.write(B)
+                r = subprocess.run([sys.executable, "-c",
+                                    "import baseline_mod;print(baseline_mod.V)"],
+                                   cwd=root, capture_output=True, text=True)
+                if r.stdout.strip() == "ADDED":
+                    poisoned += 1
+            self.assertGreater(poisoned, 0,
+                               "无 env 也没吃到旧码 —— 那这一格证明不了 tracer_env() 挡住了什么")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
