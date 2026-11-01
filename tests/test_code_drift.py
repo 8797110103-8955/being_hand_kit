@@ -121,20 +121,35 @@ class TestCodeDrift(unittest.TestCase):
     #   现在改喂构造集合给真出口，两个字段分别断言：
     #     loaded=1 打红「给了某一侧的个数」，files=[b] 打红「给了某一侧的文件」。
     #   两个变异红在不同的 assert 上 ⇒ 这一格能指「错在哪一边」，合成集合格 9 不能。
-    def test_health_reports_the_intersection_not_the_left_side(self):
+    # 拆格（2026-11-01）：原来这一格同时问三件事——changed 计数、交集大小、
+    # 交集身份。刀集跑出来 K9（两列对调，红 changed 那一行）与 K10（files
+    # 兜底塌掉，红 files 那一行）是同一个 test 的不同行，于是在「格名」粒度上
+    # 被并成一组、少算一道门（闸 B 要行粒度才能分开），而「一格多问」那条闸
+    # （闸 B′）在行粒度上又永远不响。两闸要不同粒度，根因就是这一格在问两件事。
+    # 处置是拆格，不是拆刀。
+    def _intersection_health(self):
         orig_d, orig_l = M._code_drift, M._loaded_py
         #   changed 的首元素刻意不是交集里的那个：否则 _ch[:1] 这种错法
         #   会与真交集重合，一个病在这个样本上长得和正确一模一样。
         M._code_drift = lambda *a, **k: (["hand/c.py", "hand/b.py"], [], [])
         M._loaded_py = lambda *a, **k: {"hand/a.py", "hand/b.py"}
         try:
-            out = M.health()
+            return M.health()
         finally:
             M._code_drift, M._loaded_py = orig_d, orig_l
+
+    def test_health_reports_the_intersection_size(self):
+        """问的是「交集有多大」：给 2 说明拿的是 changed 或 loaded 全集。"""
+        out = self._intersection_health()
         self.assertIn("code_drift", out)
         self.assertEqual(out["code_drift"]["changed"], 2)
         self.assertEqual(out["code_drift"]["loaded"], 1,
                          "loaded 是交集的大小：给 2 说明拿的是 changed 或 loaded 全集")
+
+    def test_health_reports_the_intersection_identity(self):
+        """问的是「交集装的是哪几个文件」：出现 c 说明拿了 changed，出现 a 说明拿了 loaded。"""
+        out = self._intersection_health()
+        self.assertIn("code_drift", out)
         self.assertEqual(out["code_drift"]["files"], ["hand/b.py"],
                          "files 必须是交集：出现 c 说明拿了 changed，出现 a 说明拿了 loaded")
 
