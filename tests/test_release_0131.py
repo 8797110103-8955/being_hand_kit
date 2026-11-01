@@ -122,11 +122,47 @@ class TestHandleCarriesFrameId(unittest.TestCase):
         the note ("readable here, but not aimable"), so this pins the *contract*
         — a note exists and it is derived from the frame bookkeeping — not the
         0.13.1 sentences, which outlived their truth.
+
+        2026-11-01T21:2xZ 收紧（围炉 #34 4439 §四 送到我仓里的一刀）：
+        原来两条都是 `assertIn(名字, 源码)`。数了一遍 `frame_lines_without_handle`
+        在整份文件里出现 6 次：3 处真代码、3 处在字符串里；而在**被测那个函数**
+        `ax_snapshot` 的源码里只有 2 次、且**两次都在字符串里**（读 ser 的键）。
+        ⇒ 把那段计算整块删掉，这条格照样绿：它钉住的是一个**读者**，不是这个数
+        怎么算出来的。改成整模块 AST，两件事都要成立：
+          ① 有人给这个名字赋过非常量的值（计算存在）
+          ② 序列化字典里键与值指向同一个名字（算出来的那个数真的被写出去）
         """
+        import ast
         from hand.perception import ax_tree
         import inspect
+        mod_src = inspect.getsource(ax_tree)
+        tree = ast.parse(mod_src)
+        assigned = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+                if "frame_lines_without_handle" in names:
+                    assigned.append(node.value)
+            elif isinstance(node, ast.AugAssign):
+                if isinstance(node.target, ast.Name) and \
+                        node.target.id == "frame_lines_without_handle":
+                    assigned.append(node.value)
+        self.assertTrue(assigned, "整模块里没有任何一处给 frame_lines_without_handle "
+                                  "赋值 —— 它只以字符串形式残留")
+        self.assertFalse(all(isinstance(v, ast.Constant) for v in assigned),
+                         "它只被赋了常量 —— 不是从 frame 记账里算出来的")
+        wired = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Dict):
+                for k, v in zip(node.keys, node.values):
+                    if isinstance(k, ast.Constant) and \
+                            k.value == "frame_lines_without_handle" and \
+                            isinstance(v, ast.Name) and \
+                            v.id == "frame_lines_without_handle":
+                        wired.append(v)
+        self.assertTrue(wired, "算出来的那个数没有被写进序列化字典 —— "
+                               "键在、值不是它，回执上的数就不是它")
         src = inspect.getsource(ax_tree.ax_snapshot)
-        self.assertIn("frame_lines_without_handle", src)
         self.assertIn("merged into this tree", src)
 
 
