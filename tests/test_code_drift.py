@@ -101,6 +101,23 @@ class TestCodeDrift(unittest.TestCase):
         finally:
             os.chmod(p, 0o644)
 
+    # 7 loaded 位：本进程确实 import 过的文件，键形状必须与 _code_snapshot 一致
+    #    （否则 changed 与 loaded 交集恒空，「落在已加载文件上」永远是 0）
+    def test_loaded_uses_the_same_key_shape(self):
+        loaded = M._loaded_py()
+        self.assertIn("kit/mcp_server.py", loaded,
+                      "dev 布局下 mcp_server 自己必然已加载；不在集合里说明键形状对不上")
+        for k in list(loaded)[:5]:
+            self.assertFalse(k.startswith(".."), f"相对路径跑出 root 了: {k}")
+
+    # 8 loaded 与 changed 的交集要真能算出来：本进程已加载的文件被改 ⇒ 必须进 hot
+    def test_changed_and_loaded_intersect(self):
+        loaded = M._loaded_py()
+        self.assertTrue(loaded)
+        start = {k: "00000000" for k in loaded}
+        hot = [k for k in loaded if M._code_snapshot().get(k) != start[k]]
+        self.assertIn("kit/mcp_server.py", hot)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

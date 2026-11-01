@@ -226,6 +226,31 @@ def _code_snapshot(base=None):
 _CODE_AT_START = _code_snapshot()
 
 
+def _loaded_py(base=None):
+    """Files this process has actually imported, as the same keys _code_snapshot uses.
+
+    "changed on disk" and "changed and loaded here" are different numbers.
+    Neuromancer 2026-11-01: without the loaded bit, `changed: 12` cannot be read
+    as "12 things affecting the path I just used". With it, the gap between the
+    two counts is itself the reading: changed-but-not-loaded is a note, loaded
+    is a wound.
+    """
+    root = base or _root
+    out = set()
+    for m in list(sys.modules.values()):
+        f = getattr(m, "__file__", None)
+        if not f:
+            continue
+        try:
+            rel = os.path.relpath(os.path.abspath(f), root).replace(os.sep, "/")
+        except ValueError:
+            continue
+        if rel.startswith(".."):
+            continue
+        out.add(rel)
+    return out
+
+
 def _code_drift(base=None, at_start=None):
     """(changed, added, missing) -- file paths, sorted.
 
@@ -578,9 +603,14 @@ def health() -> dict:
     try:
         _ch, _ad, _gone = _code_drift()
         if _ch or _ad or _gone:
+            _loaded = _loaded_py()
+            _hot = [k for k in _ch if k in _loaded]
             out["code_drift"] = {
-                "changed": len(_ch), "added": len(_ad), "missing": len(_gone),
-                "files": _ch[:12],
+                "changed": len(_ch), "loaded": len(_hot),
+                "added": len(_ad), "missing": len(_gone),
+                "files": _hot[:12] if _hot else _ch[:12],
+                "note": ("loaded = 这次改动落在本进程真的 import 过的文件上；"
+                         "changed 里其余部分可能从未被加载"),
                 "started_at": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(_started_at)),
                 "detail": "these .py files changed on disk after this process imported: "
                           "the running code may be older than the version words above",
