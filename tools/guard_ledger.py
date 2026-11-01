@@ -54,9 +54,13 @@ def note(guard, action, detail="", provenance=None):
       这正是「响过」这个状态一直分不开的那两件事。
     """
     prov = provenance or os.environ.get("HAND_GUARD_PROVENANCE") or "unlabeled"
+    # ★ run_id：由**驱动者**（tools/gate.py）发的，不是闸自己编的。
+    #   闸自己记账＝同一条证据的两个副本（Neuromancer 拒绝装台账的理由）。
+    #   驱动侧数「我叫了几次」，这里数「留了几行」，两个数对不上就是缺口。
     rec = {"ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
            "guard": guard, "action": action, "detail": str(detail)[:200],
-           "provenance": str(prov)[:80]}
+           "provenance": str(prov)[:80],
+           "run_id": os.environ.get("HAND_GUARD_RUN_ID") or None}
     try:
         with open(_path(), "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -202,11 +206,19 @@ def table(records):
 
 
 def prov_split(prov):
-    """→ (构造的次数, 未标来历的次数)。已响过必须按来历拆开印：
-    同一栏里「我造的坏世界」与「不知道谁造的」数值相同，读起来是同一件事。"""
+    """→ (构造的次数, 其它自称的次数, 未标来历的次数)。
+
+    ★ 2026-11-01T21:3xZ 修：原来只有两栏，`unl = not startswith("constructed")`
+    —— 把我自己显式标的 `natural:manual` / `manual` 全算成「未标来历」。
+    于是「我标了」与「没人标」逐字同形，而这一栏存在的意义正是分开它们。
+    今天同族第 N 次：**否定式定义的桶会把「别的」和「没有」装在一起。**
+    现在三栏：constructed:<谁> / 其它自称（原样统计）/ unlabeled。
+    """
     con = sum(n for k, n in prov.items() if k.startswith("constructed"))
-    unl = sum(n for k, n in prov.items() if not k.startswith("constructed"))
-    return con, unl
+    unl = sum(n for k, n in prov.items() if k == "unlabeled")
+    other = sum(n for k, n in prov.items()
+                if not k.startswith("constructed") and k != "unlabeled")
+    return con, other, unl
 
 
 def main():
@@ -241,10 +253,10 @@ def main():
           % ("闸", "总次", "放行", "响", "上次响", "判定"))
     unlabeled_hits = []
     for g, total, ran, ref, last, verdict, prov in rows:
-        con, unl = prov_split(prov)
+        con, other, unl = prov_split(prov)
         tail = verdict
         if ref:
-            tail = "%s（构造 %d / 未标来历 %d）" % (verdict, con, unl)
+            tail = "%s（构造 %d / 其它标注 %d / 未标来历 %d）" % (verdict, con, other, unl)
             if unl:
                 unlabeled_hits.append((g, unl))
         print("  %-16s %5d %5d %5d  %-20s %s"

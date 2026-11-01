@@ -83,7 +83,7 @@ class ProvenanceTest(_LedgerCase):
         L.note("g", "refused", "外壳造的第二发")
         os.environ.pop("HAND_GUARD_PROVENANCE")
         prov = L.table(L.load(self.p))[0][6]
-        self.assertEqual(L.prov_split(prov), (1, 1))
+        self.assertEqual(L.prov_split(prov), (1, 0, 1))
 
     def test_missing_provenance_is_not_labelled_natural(self):
         """没说出来历 ≠ 自然发生。★ 我不给「自然」盖章，只说没见过。"""
@@ -104,8 +104,17 @@ class ProvenanceTest(_LedgerCase):
         L.note("h", "refused", "我造的")
         os.environ.pop("HAND_GUARD_PROVENANCE")
         rows = {r[0]: r for r in L.table(L.load(self.p))}
-        self.assertEqual(L.prov_split(rows["g"][6]), (0, 1))
-        self.assertEqual(L.prov_split(rows["h"][6]), (1, 0))
+        self.assertEqual(L.prov_split(rows["g"][6]), (0, 0, 1))
+        self.assertEqual(L.prov_split(rows["h"][6]), (1, 0, 0))
+
+    def test_labeled_provenance_is_not_counted_as_unlabeled(self):
+        """★ 2026-11-01T21:3xZ 回归：`natural:manual` 曾被算进「未标来历」，
+        于是「我标了」与「没人标」逐字同形——而这一栏就是用来分开它们的。
+        否定式定义的桶会把「别的」和「没有」装在一起。"""
+        self.assertEqual(L.prov_split({"natural:manual": 1}), (0, 1, 0))
+        self.assertEqual(L.prov_split({"manual": 2}), (0, 2, 0))
+        self.assertEqual(L.prov_split({"constructed:test": 1, "unlabeled": 3}),
+                         (1, 0, 3))
 
 
 class ReadSideReconcileTest(_LedgerCase):
