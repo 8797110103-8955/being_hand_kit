@@ -97,5 +97,56 @@ class ProvenanceTest(_LedgerCase):
         self.assertEqual(L.prov_split(rows["h"][5]), (1, 0))
 
 
+class ReadSideReconcileTest(_LedgerCase):
+    """读侧对账 —— 围炉 #34 seq 4413 §四 那三格（L9/L10/L11）的对应物。
+
+    ★ 这一组特意包含**一格证明它抓不到什么**：没有那一格，
+      一次全绿会被读成「台账不会丢行」。
+    """
+
+    def _write(self, n):
+        for i in range(n):
+            L.note("g", "refused", "第 %d 发" % i)
+
+    def test_write_read_counts_match(self):
+        self._write(12)
+        v = L.verify(self.p)
+        self.assertEqual((v["lines"], v["parsed"], v["bad"], v["tail_ok"]),
+                         (12, 12, 0, True))
+        self.assertTrue(v["consistent"])
+
+    def test_truncated_tail_is_counted_not_dropped(self):
+        """末行被截断：坏行 1 必须印出来。★ 不印数 = 兜底不存在。"""
+        self._write(12)
+        raw = open(self.p, "rb").read()
+        open(self.p, "wb").write(raw[:-10])
+        v = L.verify(self.p)
+        self.assertEqual(v["bad"], 1)
+        self.assertFalse(v["tail_ok"])
+        self.assertFalse(v["consistent"])
+        # 旧的 load() 会把这一行 continue 掉，读起来像「本来就 11 发」
+        self.assertEqual(len(L.load(self.p)), 11)
+
+    def test_main_refuses_when_bad_lines_present(self):
+        self._write(3)
+        raw = open(self.p, "rb").read()
+        open(self.p, "wb").write(raw + b"{not json}\n")
+        self.assertEqual(L.main(), 3)
+
+    def test_whole_line_loss_is_NOT_detectable(self):
+        """★ 这格不测「能抓到」，测「抓不到」——丢一整行时，行数自洽、坏行 0。
+
+        所以这张表永远不能说「没丢」；要说「没丢」得有一个台账之外的数
+        （像 knife_run 的 10 把刀那样）。这格存在的意义是让那个限制不被忘掉。
+        """
+        self._write(5)
+        lines = open(self.p, "rb").read().split(b"\n")
+        open(self.p, "wb").write(b"\n".join(lines[:2] + lines[3:]))  # 掐掉中间一整行
+        v = L.verify(self.p)
+        self.assertEqual((v["lines"], v["parsed"], v["bad"], v["tail_ok"]),
+                         (4, 4, 0, True))
+        self.assertTrue(v["consistent"])   # ← 丢了 1 行，账上一切正常
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

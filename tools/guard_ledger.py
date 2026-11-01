@@ -52,6 +52,49 @@ def note(guard, action, detail="", provenance=None):
     return rec
 
 
+def load_checked(path=None):
+    """→ (records, bad, lines)。坏行**计数**而不是被 continue 悄悄吃掉。
+
+    为什么单独一个入口：`load()` 的签名被十几处调用，改它会动别人；
+    但对账必须要知道「有几行读不懂」——**被静默过滤的坏行，
+    和一行本来就没有的坏行，读完是同一个结果**（围炉 #34 seq 4413 §四）。
+    """
+    p = path or _path()
+    recs, bad, lines = [], 0, 0
+    if not os.path.exists(p):
+        return recs, bad, lines
+    with open(p, "rb") as f:
+        raw = f.read()
+    for chunk in raw.split(b"\n"):
+        if not chunk.strip():
+            continue
+        lines += 1
+        try:
+            recs.append(json.loads(chunk.decode("utf-8")))
+        except Exception:
+            bad += 1
+    return recs, bad, lines
+
+
+def verify(path=None):
+    """读侧对账：**读到的不等于写下的** 能不能被发现。
+
+    ★ 它能抓什么、抓不到什么，写在返回值里，不许读成「台账没问题」：
+      能抓  —— 末行被截断 / 非法 JSON / 编码坏掉  ⇒ bad > 0 或 tail_ok=False
+      抓不到 —— **整行丢失**（丢一整行时剩下的每一行都合法，行数自洽）
+              ⇒ 要抓它必须有台账之外的另一个数（例如「我这次该写 k 行」）
+    """
+    p = path or _path()
+    recs, bad, lines = load_checked(p)
+    tail_ok = True
+    if os.path.exists(p) and os.path.getsize(p) > 0:
+        with open(p, "rb") as f:
+            f.seek(-1, os.SEEK_END)
+            tail_ok = f.read(1) == b"\n"
+    return {"path": p, "lines": lines, "parsed": len(recs), "bad": bad,
+            "tail_ok": tail_ok, "consistent": (bad == 0 and tail_ok)}
+
+
 def load(path=None):
     p = path or _path()
     out = []
@@ -110,12 +153,22 @@ def prov_split(prov):
 
 
 def main():
+    v = verify()
+    if v["lines"] and not v["consistent"]:
+        print("闸台账读侧对账：坏行 %d / 末行完整 %s ⇒ **表可能不全**（%s）"
+              % (v["bad"], v["tail_ok"], v["path"]))
+        print("  ★ 坏行不会被静默丢弃——下面这张表是在缺行的前提下列出来的。")
+        print("  ★ 它抓不到「整行丢失」：丢一整行时剩下的行都合法，行数自洽。")
+        table(load())
+        return 3
     rows = table(load())
     if not rows:
         print("闸台账：空（%s）" % _path())
         print("  ⇒ 没有一道闸记过账。这不是「全部正常」，是「全部未验」。")
         return 0
     print("闸台账（%s）" % _path())
+    print("  读侧对账：行 %d / 解析 %d / 坏行 %d / 末行完整 %s"
+          % (v["lines"], v["parsed"], v["bad"], v["tail_ok"]))
     print("  %-16s %5s %5s  %-20s %s" % ("闸", "跑", "响不过", "上次响", "判定"))
     unlabeled_hits = []
     for g, ran, ref, last, verdict, prov in rows:
