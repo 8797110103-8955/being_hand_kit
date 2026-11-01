@@ -164,6 +164,19 @@ def main():
     if fatals:
         out["rc"] = 9
         out["fatal"] = "; ".join(fatals)
+    try:
+        try:
+            from tools.guard_ledger import note as _gn
+        except Exception:
+            from guard_ledger import note as _gn
+        if out.get("rc") == 9:
+            _gn("assert_trace", "refused", "rc=9 fatal=%s external=%d"
+                % (out.get("fatal"), len(out.get("external", []))))
+        else:
+            _gn("assert_trace", "ran", "tests_run=%s asserts=%d"
+                % (out.get("tests_run"), len(out.get("asserts", []))))
+    except Exception:
+        pass
     print(json.dumps(out, ensure_ascii=False))
 
 

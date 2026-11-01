@@ -21,6 +21,15 @@
 import hashlib
 import json
 import platform
+
+try:
+    from tools.guard_ledger import note as guard_note
+except Exception:  # 作为脚本直接跑时 tools 不在路径上
+    try:
+        from guard_ledger import note as guard_note
+    except Exception:
+        def guard_note(*a, **k):
+            pass
 import pathlib
 import subprocess
 import sys
@@ -186,6 +195,7 @@ def main():
     # 判据：任一格的读数不是解析出来的回执，整批作废，不给汇总。
     bad = invalid_reasons(base, rows, orig)
     if bad:
+        guard_note("knife_run", "refused", " ; ".join(bad))
         print("\n== 汇总 ==")
         print("  !! RUN INVALID — 本轮不给结论")
         for line in bad:
@@ -213,6 +223,7 @@ def main():
         else:
             print("    类（空）%-36s ← %s" % ("", " + ".join(names)))
 
+    guard_note("knife_run", "ran", "clean")
     return 0
 
 
