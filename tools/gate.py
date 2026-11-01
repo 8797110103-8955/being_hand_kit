@@ -83,6 +83,8 @@ def main(argv):
     run_id = uuid.uuid4().hex[:12]
     env = dict(os.environ)
     env["HAND_GUARD_RUN_ID"] = run_id
+    # 样本身份＝这次调用的 argv（截短）。闸自己不许编这个——它不知道谁叫它。
+    env["HAND_GUARD_SAMPLE"] = (" ".join([os.path.basename(tool)] + rest))[:80]
     if provenance:
         env["HAND_GUARD_PROVENANCE"] = provenance
     path = _ledger_path(env)

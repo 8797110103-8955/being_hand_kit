@@ -50,10 +50,37 @@ def _run_fixture(files):
                              env=env, capture_output=True, text=True, timeout=120)
         lines = [ln for ln in proc.stdout.strip().splitlines() if ln.startswith("{")]
         assert lines, "用具没印 JSON：stdout=%r stderr=%r" % (proc.stdout[-800:], proc.stderr[-800:])
-        return json.loads(lines[-1])
+        out = json.loads(lines[-1])
+        out["_process_rc"] = proc.returncode      # ★ 进程的 rc，不是 JSON 里那个数
+        return out
 
 
 class AssertTraceSelfcheck(unittest.TestCase):
+    def test_process_rc_matches_the_json_rc(self):
+        """★ 两个 rc 出口曾长期不同（JSON 说 9、进程说 0）。
+
+        所有格都读 JSON ⇒ 全绿；而 driver 侧对账、guard_ledger.run_and_note
+        这些读 `$?` 的人，把一个「它说不过」记成了「放行」。读数不许有两个出口。
+        这一格只问一件事：印在 JSON 里的 rc 与进程退出码是不是同一个数。
+        """
+        out = _run_fixture({
+            "tests/test_fixture.py": (
+                "import unittest\n"
+                "from tests import helper\n"
+                "class TestFixture(unittest.TestCase):\n"
+                "    def test_via_helper(self):\n"
+                "        helper.check(self)\n"
+            ),
+            "tests/helper.py": (
+                "def check(tc):\n"
+                "    tc.assertEqual(2, 2)\n"
+            ),
+        })
+        self.assertEqual(out["rc"], 9, out)
+        self.assertEqual(out["_process_rc"], 9,
+                         "JSON 说 rc=9 而进程说 %r —— 两个 rc 出口不同形"
+                         % (out["_process_rc"],))
+
     def test_clean_fixture_is_rc_0_and_no_external(self):
         """正控：断言全在 TARGET 里 ⇒ rc=0、external 为空。"""
         out = _run_fixture({

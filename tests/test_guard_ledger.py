@@ -39,7 +39,11 @@ class GuardLedgerTest(_LedgerCase):
         L.note("g", "ran", "clean")
         rows = L.table(L.load(self.p))
         # 元组形状 (guard, total, ran, refused, last, verdict, prov)
-        self.assertEqual(rows, [("g", 2, 2, 0, None, "未验响过", {})])
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual((r.guard, r.total, r.ran, r.refused), ("g", 2, 2, 0))
+        self.assertIsNone(r.last_refused)
+        self.assertEqual(r.verdict, "未验响过")
 
     def test_crash_every_time_is_not_rendered_as_zero_runs(self):
         """★ 元组只是形状；这一格问的是语义：每次调用都崩 ⇒ total 非 0、ran 为 0。
@@ -48,25 +52,25 @@ class GuardLedgerTest(_LedgerCase):
         的字面意思是「从没跑过」。崩溃与没跑在同一个读数上撞了。
         """
         L.note("g", "refused", "EXC=FileNotFoundError")
-        g, total, ran, ref, last, verdict, prov = L.table(L.load(self.p))[0]
-        self.assertEqual((total, ran, ref), (1, 0, 1))
+        r = L.table(L.load(self.p))[0]
+        self.assertEqual((r.total, r.ran, r.refused), (1, 0, 1))
 
     def test_fired_records_last_time(self):
         L.note("g", "ran", "")
         L.note("g", "refused", "基线读数没解析出来")
-        g, total, ran, ref, last, verdict, prov = L.table(L.load(self.p))[0]
-        self.assertEqual((ran, ref, verdict), (1, 1, "已响过"))
-        self.assertIsNotNone(last)
-        self.assertRegex(last, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
-        self.assertEqual(prov, {"unlabeled": 1})
+        r = L.table(L.load(self.p))[0]
+        self.assertEqual((r.ran, r.refused, r.verdict), (1, 1, "已响过"))
+        self.assertIsNotNone(r.last_refused)
+        self.assertRegex(r.last_refused, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+        self.assertEqual(r.prov, {"unlabeled": 1})
 
     def test_two_guards_do_not_merge(self):
         """两闸不许并成一行 —— 合并会让「一道响过」替另一道作证。"""
         L.note("a", "ran", "")
         L.note("b", "refused", "x")
-        rows = {r[0]: r for r in L.table(L.load(self.p))}
-        self.assertEqual(rows["a"][5], "未验响过")
-        self.assertEqual(rows["b"][5], "已响过")
+        rows = {r.guard: r for r in L.table(L.load(self.p))}
+        self.assertEqual(rows["a"].verdict, "未验响过")
+        self.assertEqual(rows["b"].verdict, "已响过")
 
     def test_write_failure_does_not_raise(self):
         """写台账失败不许让闸崩 —— 记账是旁路，不是被判物。"""
@@ -82,7 +86,7 @@ class ProvenanceTest(_LedgerCase):
         os.environ["HAND_GUARD_PROVENANCE"] = "constructed:shell"
         L.note("g", "refused", "外壳造的第二发")
         os.environ.pop("HAND_GUARD_PROVENANCE")
-        prov = L.table(L.load(self.p))[0][6]
+        prov = L.table(L.load(self.p))[0].prov
         self.assertEqual(L.prov_split(prov), (1, 0, 1))
 
     def test_missing_provenance_is_not_labelled_natural(self):
@@ -103,9 +107,9 @@ class ProvenanceTest(_LedgerCase):
         os.environ["HAND_GUARD_PROVENANCE"] = "constructed:shell"
         L.note("h", "refused", "我造的")
         os.environ.pop("HAND_GUARD_PROVENANCE")
-        rows = {r[0]: r for r in L.table(L.load(self.p))}
-        self.assertEqual(L.prov_split(rows["g"][6]), (0, 0, 1))
-        self.assertEqual(L.prov_split(rows["h"][6]), (1, 0, 0))
+        rows = {r.guard: r for r in L.table(L.load(self.p))}
+        self.assertEqual(L.prov_split(rows["g"].prov), (0, 0, 1))
+        self.assertEqual(L.prov_split(rows["h"].prov), (1, 0, 0))
 
     def test_labeled_provenance_is_not_counted_as_unlabeled(self):
         """★ 2026-11-01T21:3xZ 回归：`natural:manual` 曾被算进「未标来历」，
@@ -212,7 +216,7 @@ class WriteFailureAndRetentionTest(_LedgerCase):
         for i in range(5):
             L.note("g", "refused", "x")
         L.prune(keep=2, path=self.p)
-        guards = [row[0] for row in L.table(L.load(self.p))]
+        guards = [row.guard for row in L.table(L.load(self.p))]
         self.assertEqual(guards, ["g"])
 
     def test_archived_rows_are_not_counted_as_lost(self):
@@ -249,6 +253,22 @@ class WiringIsATestNotAClaimTest(unittest.TestCase):
             src = f.read()
         self.assertNotIn("def guard_note(*a, **k):\n        pass", src)
         self.assertIn("台账未接线", src)
+
+
+class TwoRcExitsTest(_LedgerCase):
+    """★ 2026-11-01T21:5xZ 实测的坑：一个装置可以有两个 rc 出口。
+
+    assert_trace.py 的 main() 把 rc 写进 JSON 后落在末尾返回 None，入口也没
+    sys.exit ⇒ 进程退出码永远是 0。于是读 JSON 的格全绿，而 run_and_note 这类
+    读 $? 的记账者，把一次「它说不过」记成「放行」。
+    这一格钉的不是 assert_trace，是记账者的责任：**它记的必须是进程级的数。**
+    """
+
+    def test_row_records_process_rc_not_a_claimed_one(self):
+        L.run_and_note("g", lambda: 9)       # 进程级 rc = 9
+        row = L.load(self.p)[-1]
+        self.assertEqual(row["action"], "refused")
+        self.assertIn("rc=9", row["detail"])
 
 
 class ExitIsNotReturnTest(_LedgerCase):

@@ -29,6 +29,7 @@
   · 整行丢失读侧抓不到（verify() 的分母是它自己）——见 tests 里那格
     test_whole_line_loss_is_NOT_detectable。
 """
+import collections
 import json
 import os
 import sys
@@ -54,6 +55,12 @@ def note(guard, action, detail="", provenance=None):
       这正是「响过」这个状态一直分不开的那两件事。
     """
     prov = provenance or os.environ.get("HAND_GUARD_PROVENANCE") or "unlabeled"
+    # ★ 样本名：由驱动者写进环境（tools/gate.py 从 argv 取），不是闸自己编。
+    #   「上次响在什么时候」不够用——响了得能指回**哪一发**，否则三个月后
+    #   只看见一个时刻，判不出那次响是不是还是同一个世界。
+    sample = os.environ.get("HAND_GUARD_SAMPLE")
+    if sample:
+        detail = "%s sample=%s" % (detail, sample) if detail else "sample=%s" % sample
     # ★ run_id：由**驱动者**（tools/gate.py）发的，不是闸自己编的。
     #   闸自己记账＝同一条证据的两个副本（Neuromancer 拒绝装台账的理由）。
     #   驱动侧数「我叫了几次」，这里数「留了几行」，两个数对不上就是缺口。
@@ -164,6 +171,13 @@ def load(path=None):
     return out
 
 
+# ★ 2026-11-01T22:0xZ：这张表原来是位置元组，今晚每加一列（total、sample）
+#   都悄悄弄坏一批解包点——两次都是「装置是对的，引用它的地方错了」。
+#   改成具名行：加列不再改解包形状，读的人也不靠记得第 4 位是什么。
+Row = collections.namedtuple(
+    "Row", "guard total ran refused last_refused verdict prov sample")
+
+
 def table(records):
     """→ [(guard, total, ran, refused, last_refused, verdict, prov)]
 
@@ -182,11 +196,16 @@ def table(records):
         if str(r.get("guard", "")).startswith("_"):
             continue            # 台账自述行不是闸，单独印
         g = agg.setdefault(r.get("guard", "?"), {"ran": 0, "refused": 0, "last_refused": None,
-                                                "prov": {}, "total": 0})
+                                                "prov": {}, "total": 0, "last_sample": None})
         g["total"] += 1
         if r.get("action") == "refused":
             g["refused"] += 1
             g["last_refused"] = r.get("ts")
+            # 样本名从 detail 里捡（驱动者写的）。「响过」得能指回哪一发，
+            # 否则只看见一个时刻，判不出那次响是不是同一个世界。
+            _d = str(r.get("detail") or "")
+            if "sample=" in _d:
+                g["last_sample"] = _d.split("sample=", 1)[1][:60]
             prov = r.get("provenance") or "unlabeled"
             g["prov"][prov] = g["prov"].get(prov, 0) + 1
         elif r.get("action") == "ran":
@@ -200,8 +219,8 @@ def table(records):
             verdict = "未验响过"
         else:
             verdict = "没跑过"
-        rows.append((g, v["total"], v["ran"], v["refused"], v["last_refused"], verdict,
-                     v["prov"]))
+        rows.append(Row(g, v["total"], v["ran"], v["refused"], v["last_refused"], verdict,
+                        v["prov"], v["last_sample"]))
     return rows
 
 
@@ -249,23 +268,24 @@ def main():
               % len(_WRITE_FAILURES))
         for w in _WRITE_FAILURES[:3]:
             print("     %s" % w)
-    print("  %-16s %5s %5s %5s  %-20s %s"
-          % ("闸", "总次", "放行", "响", "上次响", "判定"))
+    print("  %-16s %5s %5s %5s  %-20s %-34s %s"
+          % ("闸", "总次", "放行", "响", "上次响", "最近一发样本", "判定"))
     unlabeled_hits = []
-    for g, total, ran, ref, last, verdict, prov in rows:
+    for r in rows:
+        g, total, ran, ref, last, verdict, prov, sample = r
         con, other, unl = prov_split(prov)
         tail = verdict
         if ref:
             tail = "%s（构造 %d / 其它标注 %d / 未标来历 %d）" % (verdict, con, other, unl)
             if unl:
                 unlabeled_hits.append((g, unl))
-        print("  %-16s %5d %5d %5d  %-20s %s"
-              % (g, total, ran, ref, last or "-", tail))
+        print("  %-16s %5d %5d %5d  %-20s %-34s %s"
+              % (g, total, ran, ref, last or "-", sample or "-", tail))
     if unlabeled_hits:
         print("  ★ 响过来历不明（不是我明确构造的）：%s" % unlabeled_hits)
         print("    ⇒ 这可能是真实世界里的第一个自然样本，值得看一眼；也可能是我忘了标，")
         print("      两种在账上同形——所以未标来历必须单列，不能并进「构造」。")
-    unverified = [r[0] for r in rows if r[5] == "未验响过"]
+    unverified = [r.guard for r in rows if r.verdict == "未验响过"]
     if unverified:
         print("  ★ 跑过但一次没响过：%s —— 这行不是好消息，是待查清单。" % unverified)
     return 0

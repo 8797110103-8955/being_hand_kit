@@ -108,6 +108,16 @@ class FirstRed(unittest.TextTestResult):
 
 
 def main():
+    # ★ 2026-11-01T21:5xZ：本装置的靶子只走环境变量（三个 ASSERT_TRACE_*）。
+    #   实测我把靶子当位置参数递进来（`assert_trace.py /tmp/absent.py`），
+    #   它**默默用默认靶子跑完并 rc=0**——「你指的靶子不存在」与「靶子没问题」
+    #   在回执上逐字同形，而且 argv 被忽略这件事一声不响。同族：参数被吞。
+    #   契约外的东西一律拒绝出数，不猜。
+    if len(sys.argv) > 1:
+        print("REFUSED 不认位置参数：%r —— 靶子只走环境变量 "
+              "ASSERT_TRACE_ROOT / ASSERT_TRACE_TARGET / ASSERT_TRACE_MODULE"
+              % (sys.argv[1:],))
+        return 3
     patch()
     suite = unittest.defaultTestLoader.loadTestsFromName(TARGET_MODULE)
     with open(os.devnull, "w") as devnull:
@@ -178,7 +188,15 @@ def main():
     except Exception:
         pass
     print(json.dumps(out, ensure_ascii=False))
+    # ★ 2026-11-01T21:5xZ：这一行此前不存在。于是本装置有两个 rc 出口——
+    #   印在 JSON 里的那个（tests_run==0 / external 非空 ⇒ 9），和进程真正的
+    #   退出码（永远是 0，因为 main() 落到末尾返回 None）。
+    #   所有读 JSON 的格都绿，所有读 $? 的人都被骗：driver 侧对账把一次
+    #   「JSON 说 9」记成了「ran」。读数不许有两个出口。
+    return out.get("rc", 0)
 
 
 if __name__ == "__main__":
-    main()
+    # ★ 返回值必须变成进程的 rc，否则每个 return N 都是装饰：
+    #   我刚加的「不认位置参数 ⇒ return 3」实测 rc=0，因为入口丢掉了它。
+    sys.exit(main())
