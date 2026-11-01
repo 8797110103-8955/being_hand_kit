@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, os, json, time
+import sys, os, json, time, hashlib
 import pathlib
 _HERE = os.path.dirname(os.path.abspath(__file__))
 # Support two layouts:
@@ -186,6 +186,60 @@ def _fork_cause(man_now):
     if state_at_start != "ok":
         return "unknown"
     return "long_standing" if ver_at_start == man_now else "changed_since_start"
+
+
+# --- code drift -----------------------------------------------------------
+# `hand_version` is a literal captured at import; the manifest is re-read every
+# call. Both are *words on disk*. Neither is a fingerprint of the code this
+# process is actually executing. So a long-lived process can report
+# status=alive / version=X / manifest ok / no fork -- five true words -- while
+# running code that is days old.
+#
+# Measured 2026-11-01 on the live install: started 10-27 16:56, 12 .py files
+# under hand/ and kit/ changed since then, health receipt all green.
+#
+# Cost of the snapshot: 39 files / 519 KB / 9.9 ms. Taken once at import, so it
+# is paid once per process, not per call.
+def _code_snapshot(base=None):
+    """sha256[:8] of every .py under hand/ and kit/. Unreadable files get a word."""
+    root = base or _root
+    out = {}
+    for sub in ("hand", "kit"):
+        d = os.path.join(root, sub)
+        if not os.path.isdir(d):
+            continue
+        for dirpath, dirnames, filenames in os.walk(d):
+            dirnames[:] = [x for x in dirnames if x != "__pycache__"]
+            for fn in filenames:
+                if not fn.endswith(".py"):
+                    continue
+                p = os.path.join(dirpath, fn)
+                key = os.path.relpath(p, root).replace(os.sep, "/")
+                try:
+                    with open(p, "rb") as f:
+                        out[key] = hashlib.sha256(f.read()).hexdigest()[:8]
+                except OSError:
+                    out[key] = "unreadable"
+    return out
+
+
+_CODE_AT_START = _code_snapshot()
+
+
+def _code_drift(base=None, at_start=None):
+    """(changed, added, missing) -- file paths, sorted.
+
+    changed/added are about files this process may already have imported.
+    A changed file is not proof of a bug: it may be a module nobody loaded.
+    The receipt says "on disk moved", never "what you run is wrong" -- the gap
+    between those two needs a per-file diff, which this cannot do from inside.
+    """
+    now = _code_snapshot(base)
+    was = _CODE_AT_START if at_start is None else at_start
+    changed = sorted(k for k in now if k in was and was[k] != now[k])
+    added = sorted(k for k in now if k not in was)
+    missing = sorted(k for k in was if k not in now)
+    return changed, added, missing
 
 
 def _startup_version_notice(base=None):
@@ -510,10 +564,29 @@ def health() -> dict:
             #   long_standing   — the manifest said this when we started too
             #   changed_since_start — the disk moved under a running process
             #   unknown         — we had no readable manifest at start
-            # The third, "you are reading a different copy than you think",
-            # cannot be answered from inside the process at all.
+            # 2026-11-01: "you are reading a different copy than you think" used
+            # to be unanswerable from inside. Half of it is now answerable, on
+            # the code axis rather than the manifest axis -- see code_drift
+            # below, which hashes every .py at import and reports what moved.
+            # Still unanswerable: which of those files this process actually
+            # imported, and what changed inside them.
             "cause": _fork_cause(man_v),
         }
+    # What I run is not what you read. Report it only when it is true, and say
+    # only what a hash can support: files on disk moved after this process
+    # imported them. Never "you are running stale code" -- that needs a diff.
+    try:
+        _ch, _ad, _gone = _code_drift()
+        if _ch or _ad or _gone:
+            out["code_drift"] = {
+                "changed": len(_ch), "added": len(_ad), "missing": len(_gone),
+                "files": _ch[:12],
+                "started_at": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(_started_at)),
+                "detail": "these .py files changed on disk after this process imported: "
+                          "the running code may be older than the version words above",
+            }
+    except Exception as e:
+        out["code_drift"] = {"state": "unreadable", "detail": f"{type(e).__name__}: {e}"}
     return out
 if __name__ == "__main__":
     _notice = _startup_version_notice()
