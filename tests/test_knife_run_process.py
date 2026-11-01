@@ -31,6 +31,8 @@ import tempfile
 import unittest
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(HERE / "tools"))
+import knife_run            # noqa: E402  地基那几格要直接调它，不走子进程
 TOOL = HERE / "tools" / "knife_run.py"
 REAL_SRC = HERE / "kit" / "mcp_server.py"
 
@@ -108,3 +110,55 @@ class KnifeRunProcess(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class Foundation(unittest.TestCase):
+    """★ 地基校验（2026-11-01T21:5xZ，围炉 #34 seq 4447 之后）。
+
+    sha 校验只覆盖「我写进去的 → 子进程读的」。它不覆盖
+    「我写进去之前那份是不是原版」。实测（不是推理）：把 kit/mcp_server.py
+    留在变异态，clean 基线照样 rc=0、landed 全 True、十把刀全落在变异地上。
+    ⇒ 「上一轮的残局当这一轮的地基」与「地基是原版」在读数上同形。"""
+
+    def test_clean_repo_is_not_dirty(self):
+        state, why = knife_run.foundation_dirty()
+        self.assertEqual(state, "clean", "真仓干净却报 %s —— 这格会天天误红" % state)
+
+    def test_tracked_file_with_uncommitted_change_is_dirty(self):
+        import subprocess as sp
+        target = knife_run.SRC
+        target.write_text(target.read_text() + "\n# dirty\n")
+        try:
+            state, why = knife_run.foundation_dirty()
+            self.assertEqual(state, "dirty", "改了被追踪的文件却报 %s —— 残局冒充原版" % state)
+            self.assertIn("HEAD", why)
+        finally:
+            sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
+                    str(target)], check=True)
+
+    def test_git_rc1_is_not_enough_to_call_it_dirty(self):
+        """★ `git diff --quiet HEAD` 在非仓目录里也返回 rc=1。
+
+        2026-11-01T22:0xZ 实测：`git -C /tmp/notarepo diff --quiet HEAD -- f`
+        ⇒ rc=1 + stderr `error: Could not access 'HEAD'`。
+        同一个 1 同时表示「有差异」和「我这个查询本身失败」。
+        ⇒ 先问「这是不是工作树」（用词回答），再问「有没有差异」（用码回答）。
+        这一格：非仓目录必须是 unverifiable，不是 dirty，也不是 clean。"""
+        root = pathlib.Path(tempfile.mkdtemp(prefix="notarepo_"))
+        (root / "kit").mkdir()
+        f = root / "kit" / "x.py"
+        f.write_text("X = 1\n")
+        state, why = knife_run.foundation_dirty(f)
+        self.assertEqual(state, "unverifiable",
+                         "非仓目录被读成 %s —— rc=1 的两个互斥结局又被合并了" % state)
+
+    def test_dirty_foundation_refuses_whole_batch(self):
+        import subprocess as sp
+        target = knife_run.SRC
+        target.write_text(target.read_text() + "\n# dirty\n")
+        try:
+            rc = knife_run.main()
+            self.assertEqual(rc, 9, "地基脏了还给读数 —— 这一批全砍在残局上")
+        finally:
+            sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
+                    str(target)], check=True)

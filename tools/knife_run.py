@@ -113,6 +113,44 @@ KNIVES = {
 }
 
 
+def foundation_dirty(path=SRC):
+    """地基是不是上一轮的残局。→ (状态, 说明)，状态 ∈ clean / dirty / unverifiable
+
+    为什么要有这个（2026-11-01T21:5xZ，围炉 #34 seq 4447 之后）：
+    我的 sha 校验只覆盖「我写进去的那份 → 子进程读的那份」，
+    **不覆盖「我写进去之前那份是不是原版」。**
+    实测（不是推理）：把 kit/mcp_server.py 留在变异态（末尾多加一行注释，
+    语法有效）再跑 —— clean 基线照样 rc=0、landed 全 True、十把刀全落在变异地上。
+    整批读数看起来完好，而地基是上一轮的残局。
+    ⇒ 判据：**一个校验只守得住它自己声明的那一段；「我拿上一轮的残局当这一轮的地基」
+      与「这一轮的地基是原版」在读数上同形，除非有人去比原版。**
+    原版只有一个权威来源：仓里那一份（git HEAD）。
+    ★ 三态不是两态：「这个根根本不在 git 仓里」与「地基脏」必须分开——
+      前者我可以继续（合成根本来就没有原版），后者必须拒。
+      但「不适用」必须印出来，不能安静地跳过：见 main() 里的那一行。
+    """
+    root = path.parent.parent
+    # ★ 先问「这是不是一个工作树」，再问「有没有差异」（2026-11-01T22:0xZ 实测）：
+    #   `git diff --quiet HEAD -- <path>` 在**非仓目录**里也返回 rc=1，
+    #   stderr 写 `error: Could not access 'HEAD'`。
+    #   ⇒ rc=1 同时表示「有差异」和「我这个查询本身失败」——两个互斥结局同一个值。
+    #     所以判据不能只有退出码，得有一步**用词回答**的正面判据（category，不是 code）。
+    chk = subprocess.run(["git", "-C", str(root), "rev-parse",
+                          "--is-inside-work-tree"], capture_output=True)
+    if chk.returncode != 0 or chk.stdout.strip() != b"true":
+        err = (chk.stderr or b"")[:100].decode("utf-8", "replace").strip()
+        return "unverifiable", "%s 不在 git 工作树里（%s）" % (root.name or root, err)
+    d = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--",
+                        str(path)], capture_output=True)
+    if d.returncode == 0 and not d.stderr.strip():
+        return "clean", ""
+    if d.returncode == 1 and not d.stderr.strip():
+        return "dirty", ("%s 与 HEAD 不一致 —— 它可能是我上一轮崩溃留下的变异态，"
+                         "这一批刀会全砍在残局上" % path.name)
+    err = (d.stderr or b"")[:120].decode("utf-8", "replace").strip()
+    return "unverifiable", "git diff rc=%d（%s）" % (d.returncode, err)
+
+
 def invalid_reasons(base, rows, orig):
     """本轮读数为什么不成形 —— 纯判据，不跑任何东西，可以被单测喂合成数据。
 
@@ -174,6 +212,15 @@ def main():
     # 才被这一行同样的检查抓到，所以它从此直接印在报表头上。
     print("env python=%s os=%s impl=%s"
           % (platform.python_version(), platform.system(), platform.python_implementation()))
+    state, why = foundation_dirty()
+    if state == "dirty":
+        print("!! RUN INVALID 地基不干净：%s" % why)
+        print("   先 `git checkout -- %s` 再跑；这一批不给读数" % SRC.name)
+        guard_note("knife_run", "refused", why[:200])
+        return 9
+    if state == "unverifiable":
+        # 不安静跳过：合成根没有原版可比，但读者得看见这句
+        print("· 地基校验不适用：%s —— 本根没有原版可比，读数只对本根成立" % why)
     print("== clean ==")
     base = run_one(orig)
     print("  rc=%s module_sha=%s first_red=%s"
