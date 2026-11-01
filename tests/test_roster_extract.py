@@ -134,5 +134,24 @@ class RosterExtractTest(unittest.TestCase):
         self.assertNotIn("ALL EQUAL", out, out)
 
 
+class EmptyRosterMustNotBeGreenTest(unittest.TestCase):
+    """纸面检查（2026-11-01T20:2xZ）：0 格与「全等」在旧版里同一个读数。
+
+    roster 抽出 0 格、runner 也说 Ran 0 tests ⇒ 逐项相等 ⇒ ALL EQUAL / rc=0。
+    那时的绿不是「对账通过」，是「两边都什么也没读到」。空结果必须 rc=9。
+    """
+
+    def test_zero_roster_is_rc_9_not_all_equal(self):
+        raw = "=== x ===\nRan 0 tests in 0.0s\n\nOK\n"
+        rc, out = run_tool(raw)
+        self.assertEqual(rc, 9, f"空结果 rc={rc}，必须为 9\n{out}")
+        self.assertNotIn("ALL EQUAL", out, out)
+
+    def test_empty_file_is_rc_9(self):
+        rc, out = run_tool("")
+        self.assertEqual(rc, 9, out)
+        self.assertNotIn("ALL EQUAL", out, out)
+
+
 if __name__ == "__main__":
     unittest.main()

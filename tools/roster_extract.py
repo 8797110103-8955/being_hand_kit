@@ -115,6 +115,16 @@ def main(path):
     for reason, n in skip_reasons.most_common():
         print(f"  {n:4d}  {reason}")
 
+    # ★ 纸面检查（2026-11-01T20:2xZ）：值域比结局窄的一格。
+    #   roster 抽出 0 格、runner 也说 Ran 0 tests 时，两边相等 ⇒ 走到
+    #   「ALL EQUAL — 逐字相等」rc=0。**没测到 与 测过且为零，同一个读数。**
+    #   同族第四例的同一形状（我自己的规则：空结果要 rc=9，不许安静地对账成功）。
+    if not roster:
+        print("!! roster 抽出 0 格 —— 空结果不许读成全等（rc=9）")
+        print("   判据：0 格既可能是「这文件真没有 test」，也可能是「我的抽取器认不出它了」；")
+        print("   两者在这里同形。要么给分母（summary 报了几格且 >0），要么拒绝出结论。")
+        return 9
+
     m_ran = SUMMARY_RAN.search(text)
     m_det = SUMMARY_DETAIL.search(text[m_ran.end():]) if m_ran else None
     if not (m_ran and m_det):
