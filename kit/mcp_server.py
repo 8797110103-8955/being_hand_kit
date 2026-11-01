@@ -200,6 +200,21 @@ def _fork_cause(man_now):
 #
 # Cost of the snapshot: 39 files / 519 KB / 9.9 ms. Taken once at import, so it
 # is paid once per process, not per call.
+def _hot_paths(changed, loaded):
+    """changed ∩ loaded —— 改动落在本进程真的 import 过的文件上的那部分。
+
+    Exists as its own function because of a defect found 2026-11-01: the
+    intersection used to be written inline here in health(), and the only test
+    that looked like it covered this (test_changed_and_loaded_intersect)
+    recomputed the intersection itself from a fake all-dirty `start`. So the
+    test was green no matter what this line did -- it was testing its own copy.
+    Both sides must be non-degenerate in the sample: `changed` alone would pass
+    a test where loaded is everything, `loaded` alone would pass one where
+    changed is everything.
+    """
+    return [k for k in changed if k in loaded]
+
+
 def _code_snapshot(base=None):
     """sha256[:8] of every .py under hand/ and kit/. Unreadable files get a word."""
     root = base or _root
@@ -604,7 +619,7 @@ def health() -> dict:
         _ch, _ad, _gone = _code_drift()
         if _ch or _ad or _gone:
             _loaded = _loaded_py()
-            _hot = [k for k in _ch if k in _loaded]
+            _hot = _hot_paths(_ch, _loaded)
             out["code_drift"] = {
                 "changed": len(_ch), "loaded": len(_hot),
                 "added": len(_ad), "missing": len(_gone),
