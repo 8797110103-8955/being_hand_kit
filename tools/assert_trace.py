@@ -89,9 +89,23 @@ def main():
     suite = unittest.defaultTestLoader.loadTestsFromName("tests.test_code_drift")
     with open(os.devnull, "w") as devnull:
         res = unittest.TextTestRunner(resultclass=FirstRed, stream=devnull).run(suite)
+    # 落点回读：报告**被测进程实际 import 的那份文件**的 sha，
+    # 不是「我以为我写的那份」。两者不是同一个事实——
+    # 「我写了」与「它读到的是那份」之间隔着 .pyc 缓存、cwd、sys.path、
+    # 写在了读之后。Neuromancer 10-31 v1 就是这么栽的（import 主探针 ⇒
+    # 他改的那份没被执行，读数「没变化」)。
+    import hashlib
+    try:
+        import kit.mcp_server as _M
+        _mf = os.path.abspath(_M.__file__)
+        _msha = hashlib.sha256(open(_mf, "rb").read()).hexdigest()[:8]
+    except Exception as e:  # noqa: BLE001
+        _mf, _msha = None, "import_failed:%s" % e
     out = {
         "rc": 0 if res.wasSuccessful() else 1,
         "tests_run": res.testsRun,
+        "module_file": _mf,
+        "module_sha": _msha,
         "asserts": [{"test": t, "line": l, "method": m, "hits": c}
                     for (t, l, m), c in sorted(_records.items())],
         "first_red": {k: v for k, v in res.first_red.items() if v is not None},
