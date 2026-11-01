@@ -67,7 +67,13 @@ def has_exit(node):
     return False
 
 
-VIEWS = ("tools", "tests/live")
+# ★ 每个视野分量带自己的锚（2026-11-01T21:5xZ，围炉 #34 seq 4447 之后）：
+#   一个锚只守得住它所在的那个分量。我上一个版本只有一个锚（tools/entry_scan.py），
+#   于是 tests/live 那个分量**整个坏掉与它本来就是空的同形** ——
+#   锚在场的绿会盖住第二个分量消失的红。
+#   ⇒ 判据：**共用一个锚的多分量视野，坏掉一个分量的形状与那个分量本来就空同形。**
+#     每个分量都要有自己的锚；锚的失效模式必须是「拒绝给结论」，不能是「放行」。
+VIEWS = (("tools", "entry_scan.py"), ("tests/live", "live_dpr_once.py"))
 # ★ 自锚（2026-11-01T21:4xZ，围炉 #34 seq 4445 → 之后）：
 #   视野校验只查「扫到 0 个」太弱 —— 扫到一个不相关的文件它照样放行，
 #   于是「我看着的是一堆文件」与「我看着的是我该看的那些」依旧同形。
@@ -75,7 +81,7 @@ VIEWS = ("tools", "tests/live")
 #   它是我唯一能百分百断言「一定存在且一定该被扫到」的东西。
 #   ⇒ 判据形状：视野校验要用「一个必然在场的锚」，不用节点数/文件数阈值。
 #     数量阈值（≥3 个进程、≥2 层）会把「合法的窄视野」判成「视野不成立」。
-ANCHOR = "tools/entry_scan.py"
+VIEW_NAMES = tuple(v for v, _ in VIEWS)
 
 
 def _bare_main_call(tree):
@@ -89,17 +95,21 @@ def _bare_main_call(tree):
 
 def _view_files(root):
     files = []
-    for v in VIEWS:
+    for v, _anchor in VIEWS:
         files.extend(sorted((root / v).glob("*.py")))
     return files
 
 
-def anchor_seen(root):
-    """被扫集合里有没有我自己。→ (bool, 锚的绝对路径)"""
-    anchor = pathlib.Path(root) / ANCHOR
-    if not anchor.exists():
-        return False, anchor
-    return (anchor in _view_files(root)), anchor
+def missing_anchors(root):
+    """每个视野分量的锚在不在被扫集合里。→ [(分量, 锚路径), …]（空 = 全在）"""
+    root = pathlib.Path(root)
+    seen_files = set(_view_files(root))
+    out = []
+    for view, anchor in VIEWS:
+        a = root / view / anchor
+        if a not in seen_files:
+            out.append((view, a))
+    return out
 
 
 def scan(root):
@@ -135,17 +145,18 @@ def scan(root):
 def main(argv):
     root = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path(__file__).parent.parent
     seen, checked, problems, suspects = scan(root)
-    ok_anchor, anchor = anchor_seen(root)
-    if seen and not ok_anchor:
-        print("!! REFUSED 视野不成立：锚 %s 不在被扫的 %d 个文件里 —— "
-              "「扫到文件」不等于「扫到该扫的」" % (anchor, seen))
+    missing = missing_anchors(root)
+    if missing:
+        for view, a in missing:
+            print("!! REFUSED 视野分量 %-11s 的锚不在视野里：%s" % (view, a))
+        print("   —— 一个分量坏掉，与它本来就是空的同形；共用一个锚守不住第二个分量")
         return 2
     if seen == 0:
         print("!! REFUSED 视野为空：%s 下一个 .py 都没扫到 —— 这是「没扫到东西」，"
               "不是「扫完干净」" % (root,))
         return 2
-    print("看了 %d 个文件（%s，锚 %s 在场），其中 %d 个有 main()，洞 %d 条"
-          % (seen, " + ".join(VIEWS), ANCHOR, checked, len(problems)))
+    print("看了 %d 个文件（%s，每分量锚在场），其中 %d 个有 main()，洞 %d 条"
+          % (seen, " + ".join(VIEW_NAMES), checked, len(problems)))
     # ★ 0 例的档位不等于判对（2026-11-01T21:4xZ）：空档印「未覆盖」，
     #   不印「疑 0 条」——后者读起来和「疑档判得准」一模一样。
     if suspects:

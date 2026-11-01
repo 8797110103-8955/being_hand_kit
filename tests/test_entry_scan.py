@@ -48,6 +48,10 @@ def fixture(*sources, anchor=True):
     专门要测「锚不在视野里」的那一格传 anchor=False。"""
     root = pathlib.Path(tempfile.mkdtemp(prefix="entryscan_"))
     (root / "tools").mkdir()
+    (root / "tests" / "live").mkdir(parents=True)
+    if anchor:
+        # 每个视野分量自己的锚；其中一个缺席由专门那一格测（anchor=False 或手工删）
+        (root / "tests" / "live" / "live_dpr_once.py").write_text("print(2)\n")
     if anchor and not any(n == "entry_scan.py" for n, _ in sources):
         (root / "tools" / "entry_scan.py").write_text("print(1)\n")   # 无 main()，不进 checked
     for name, body in sources:
@@ -103,10 +107,24 @@ class EntryScan(unittest.TestCase):
         root = pathlib.Path(tempfile.mkdtemp())
         (root / "tools").mkdir()
         (root / "tools" / "other.py").write_text("print(1)\n")   # 有文件、无锚
-        ok, anchor = entry_scan.anchor_seen(root)
-        self.assertFalse(ok)
+        miss = entry_scan.missing_anchors(root)
+        self.assertIn("tools", [v for v, _ in miss], "tools 的锚不在视野里却没报")
         self.assertEqual(entry_scan.main(["entry_scan.py", str(root)]), 2,
                          "视野里没有锚却给了 0 —— 它把「没看对」报成了「看干净了」")
+
+    def test_each_view_component_needs_its_own_anchor(self):
+        """★ 一个锚守不住第二个分量。
+
+        上一个版本只有一个锚（tools/entry_scan.py），于是 tests/live 整个坏掉
+        （目录改名、glob 失效、文件被删）与「tests/live 本来就是空的」同形——
+        tools 那边的绿会盖住这一半。2026-11-01T21:5xZ，围炉 #34 seq 4447 之后。
+        这一格：tools 的锚在、tests/live 的锚被删 ⇒ REFUSED rc=2，并指名是哪个分量。"""
+        root = fixture(("ok.py", EXITED))
+        (root / "tests" / "live" / "live_dpr_once.py").unlink()
+        miss = entry_scan.missing_anchors(root)
+        self.assertEqual([v for v, _ in miss], ["tests/live"],
+                         "第二个分量的锚没了却没报 —— 它的绿盖住了这一半")
+        self.assertEqual(entry_scan.main(["entry_scan.py", str(root)]), 2)
 
     def test_zero_sample_tier_prints_uncovored_not_zero(self):
         """★ 0 例的档位：印「未覆盖」，不印「0 条」。
@@ -131,7 +149,7 @@ class EntryScan(unittest.TestCase):
 
     def test_view_is_wider_than_tools(self):
         """视野本身要被钉住：只 glob tools/ 时，tests/live 里那三个裸 main() 全在视野外。"""
-        self.assertIn("tests/live", entry_scan.VIEWS)
+        self.assertIn("tests/live", entry_scan.VIEW_NAMES)
         seen, checked, problems, suspects = entry_scan.scan(HERE)
         self.assertGreater(seen, checked, "视图里除了 tool 还得有别的东西")
 
