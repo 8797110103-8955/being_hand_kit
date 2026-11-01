@@ -16,3 +16,4 @@ kit/.chrome-profile/
 
 # 每次跑出来的 raw 捕获是当天的证据，不是源码（roster_extract 的自证用合成夹具，不依赖它）
 baselines/
+.concurrency/
