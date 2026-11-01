@@ -225,5 +225,48 @@ class Foundation(unittest.TestCase):
             shutil.rmtree(root, ignore_errors=True)
 
 
+    # ——— 2026-11-01T23:0xZ：两个「路存在，但没人看着它」的格 ———
+    # 由 Neuromancer 在 #34 seq 4462 §二 的方法发现：他那边
+    # `py_compile.compile(...)` 那一行没有任何会红的格子守着，删掉它整张
+    # 变异表静默变绿、回执照印「接住 9/9」。
+    # ★ 判据：**「路存在」与「路被看着」在 grep 上同形——两者都有那一行。**
+    #   只有把那一行**真的挖掉**、看有没有格子变红，才分得开。
+    # ★ 我用这个方法砍自己 20 分钟前刚写的代码，三刀里两刀全绿：
+    #   刀A 删掉 main() 的 empty 分支 ⇒ 1003 全绿、零红（下面这格就是补它的）
+    #   刀B 删掉分母那行印字      ⇒ 1003 全绿、零红（下面第二格补它）
+    #   刀C 把地基集缩回 [SRC]     ⇒ FAIL ✓（正控：方法有判别力，不是刀刀杀不死）
+
+    def test_main_refuses_when_foundation_set_is_empty(self):
+        """刀A 的对手：empty 分支真的挡住了整批吗（不只是 foundation_dirty 认得 empty）。"""
+        import contextlib
+        import io
+        old = knife_run.foundation_files
+        knife_run.foundation_files = lambda: []
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                rc = knife_run.main()
+        finally:
+            knife_run.foundation_files = old
+        out = buf.getvalue()
+        self.assertEqual(rc, 9, "地基集为空仍给读数 —— 分母为零的绿")
+        self.assertIn("RUN INVALID", out)
+        self.assertNotIn("类数", out, "作废的一轮仍然印了汇总 —— 空读数与零同形")
+
+    def test_summary_states_the_foundation_denominator(self):
+        """刀B 的对手：分母必须印在报表头上，读者才知道这一批罩住了几个文件。"""
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            knife_run.main()
+        out = buf.getvalue()
+        n = len(knife_run.foundation_files())
+        self.assertIn("地基 %d 个文件" % n, out,
+                      "报表没印分母 —— 读者无法判断这批读数罩住了几个文件")
+        for p in knife_run.foundation_files():
+            self.assertIn(p.name, out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
