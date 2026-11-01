@@ -103,3 +103,62 @@ class AssertTraceSelfcheck(unittest.TestCase):
         })
         self.assertEqual(out["rc"], 9, out)
         self.assertIn("no tests", out.get("fatal", ""), out)
+
+
+class LandedColumnSelfcheck(unittest.TestCase):
+    """「落点」那栏（self-reported module_sha == 我写进去那份的 sha）的第一次响。
+
+    为什么（2026-11-01 18:4x，围炉 #34 seq 4391）：我给每道闸配「响过没有」时，
+    自己仓里只剩一栏是 `—`：落点 sha 不一致 ⇒ 读数作废。它恒真不是因为它稳，
+    是因为**从来没有任何一次运行让「我改的那份」和「它 import 到的那份」变成两个文件**。
+
+    真实事故形状（我今天上午真撞过同族一次）：我改 A 目录的源码，
+    但 sys.path 里排在前面的 B 目录有一份同名模块 ⇒ 跑的是 B，我量的是 A。
+    这一格造的就是那个形状，验的是：**回执自报的 file + sha 能不能让 driver 看见这件事。**
+    """
+
+    def test_shadowed_subject_is_visible_in_receipt(self):
+        import hashlib
+        import subprocess as sp
+        import sys as _sys
+
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d) / "root"      # 我改的那份所在的树
+            shad = pathlib.Path(d) / "shadow"    # 实际 import 到的那份
+            for base in (root, shad):
+                (base / "tests").mkdir(parents=True)
+                (base / "tests" / "__init__.py").write_text("")
+            (root / "vendor").mkdir()
+            # 我「写进去」的那份
+            (root / "vendor" / "subj.py").write_text("VALUE = 'A'\n")
+            # 环境里能 import 到的那份（同名、不同内容）
+            (shad / "subj.py").write_text("VALUE = 'B'\n")
+            (root / "tests" / "test_fixture.py").write_text(
+                "import unittest\n"
+                "class TestFixture(unittest.TestCase):\n"
+                "    def test_ok(self):\n"
+                "        self.assertEqual(1, 1)\n"
+            )
+            env = dict(os.environ)
+            env.update(PYTHONPATH=str(shad), ASSERT_TRACE_ROOT=str(root),
+                       ASSERT_TRACE_TARGET=str(root / "tests" / "test_fixture.py"),
+                       ASSERT_TRACE_MODULE="tests.test_fixture",
+                       ASSERT_TRACE_SUBJECT="subj")
+            proc = sp.run([_sys.executable, str(TOOL)], cwd=str(root), env=env,
+                          capture_output=True, text=True, timeout=120)
+            lines = [ln for ln in proc.stdout.strip().splitlines() if ln.startswith("{")]
+            self.assertTrue(lines, proc.stdout[-800:] + proc.stderr[-800:])
+            out = json.loads(lines[-1])
+
+            want = hashlib.sha256((root / "vendor" / "subj.py").read_bytes()).hexdigest()[:8]
+            got_file = pathlib.Path(out["module_file"] or "")
+            got = out["module_sha"]
+
+            # 1 它自报了落点文件——不是「一个 sha」了事，得指得出来源
+            self.assertEqual(got_file.name, "subj.py", out)
+            # 2 它读到的是影子那份，不是我写的那份
+            self.assertEqual(str(got_file.resolve()).startswith(str(shad.resolve())), True, out)
+            self.assertNotEqual(got, want, "落点栏没响：它读的就是我写的那份")
+            # 3 于是 driver 那一句 `got_sha == want_sha` 在这里为 False ⇒ 读数该作废
+            self.assertFalse(got == want)
+            self.assertEqual(proc.returncode, 0, "落点不一致不是装置坏了，读数作废另有其栏")
