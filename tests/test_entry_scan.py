@@ -43,9 +43,13 @@ if __name__ == "__main__":
 '''
 
 
-def fixture(*sources):
+def fixture(*sources, anchor=True):
+    """合成根目录。**默认带上自锚**（tools/entry_scan.py），因为判据里视野必须有它；
+    专门要测「锚不在视野里」的那一格传 anchor=False。"""
     root = pathlib.Path(tempfile.mkdtemp(prefix="entryscan_"))
     (root / "tools").mkdir()
+    if anchor and not any(n == "entry_scan.py" for n, _ in sources):
+        (root / "tools" / "entry_scan.py").write_text("print(1)\n")   # 无 main()，不进 checked
     for name, body in sources:
         (root / "tools" / name).write_text(body)
     return root
@@ -88,6 +92,34 @@ class EntryScan(unittest.TestCase):
         self.assertEqual(len(problems), 1, problems)
         self.assertEqual(suspects, [])
         self.assertEqual(entry_scan.main(["entry_scan.py", str(root)]), 1)
+
+    def test_anchor_missing_from_view_is_refused(self):
+        """★ 视野校验的强形式：扫到文件 ≠ 扫到我该扫的那些。
+
+        「seen == 0」只挡住「什么都没扫到」。扫到一个**不相关**的文件它照样放行——
+        2026-11-01T21:4xZ 我发现自己那版就是这形状（围炉 #34 seq 4445 之后）。
+        锚是我唯一能百分百断言「一定存在且一定该被扫到」的东西。
+        这一格：目录里有文件、但没有锚 ⇒ REFUSED rc=2。"""
+        root = pathlib.Path(tempfile.mkdtemp())
+        (root / "tools").mkdir()
+        (root / "tools" / "other.py").write_text("print(1)\n")   # 有文件、无锚
+        ok, anchor = entry_scan.anchor_seen(root)
+        self.assertFalse(ok)
+        self.assertEqual(entry_scan.main(["entry_scan.py", str(root)]), 2,
+                         "视野里没有锚却给了 0 —— 它把「没看对」报成了「看干净了」")
+
+    def test_zero_sample_tier_prints_uncovored_not_zero(self):
+        """★ 0 例的档位：印「未覆盖」，不印「0 条」。
+        后者读起来和「这一档判得准」一模一样（同一句话的另一端见围炉 #34 seq 4445 §五）。"""
+        root = fixture(("a.py", EXITED))
+        seen, checked, problems, suspects = entry_scan.scan(root)
+        self.assertEqual(suspects, [])
+        import io, contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            entry_scan.main(["entry_scan.py", str(root)])
+        out = buf.getvalue()
+        self.assertIn("未覆盖", out, "空档没印「未覆盖」—— 它读起来会像判对了")
 
     def test_empty_view_is_refused_not_clean(self):
         """★ 视野为空必须红。否则「我没扫到东西」和「我扫完干净」在回执上同形

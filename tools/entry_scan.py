@@ -68,6 +68,14 @@ def has_exit(node):
 
 
 VIEWS = ("tools", "tests/live")
+# ★ 自锚（2026-11-01T21:4xZ，围炉 #34 seq 4445 → 之后）：
+#   视野校验只查「扫到 0 个」太弱 —— 扫到一个不相关的文件它照样放行，
+#   于是「我看着的是一堆文件」与「我看着的是我该看的那些」依旧同形。
+#   加一个类别判据（不是数量判据）：**视野里必须有我自己这个文件**。
+#   它是我唯一能百分百断言「一定存在且一定该被扫到」的东西。
+#   ⇒ 判据形状：视野校验要用「一个必然在场的锚」，不用节点数/文件数阈值。
+#     数量阈值（≥3 个进程、≥2 层）会把「合法的窄视野」判成「视野不成立」。
+ANCHOR = "tools/entry_scan.py"
 
 
 def _bare_main_call(tree):
@@ -79,14 +87,26 @@ def _bare_main_call(tree):
     return False
 
 
+def _view_files(root):
+    files = []
+    for v in VIEWS:
+        files.extend(sorted((root / v).glob("*.py")))
+    return files
+
+
+def anchor_seen(root):
+    """被扫集合里有没有我自己。→ (bool, 锚的绝对路径)"""
+    anchor = pathlib.Path(root) / ANCHOR
+    if not anchor.exists():
+        return False, anchor
+    return (anchor in _view_files(root)), anchor
+
+
 def scan(root):
     """→ (看得见的文件数, 检查数, 洞列表, 疑列表)。"""
     root = pathlib.Path(root)
     problems, suspects, checked, seen = [], [], 0, 0
-    files = []
-    for v in VIEWS:
-        files.extend(sorted((root / v).glob("*.py")))
-    for p in files:
+    for p in _view_files(root):
         seen += 1
         try:
             tree = ast.parse(p.read_text())
@@ -115,12 +135,23 @@ def scan(root):
 def main(argv):
     root = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path(__file__).parent.parent
     seen, checked, problems, suspects = scan(root)
+    ok_anchor, anchor = anchor_seen(root)
+    if seen and not ok_anchor:
+        print("!! REFUSED 视野不成立：锚 %s 不在被扫的 %d 个文件里 —— "
+              "「扫到文件」不等于「扫到该扫的」" % (anchor, seen))
+        return 2
     if seen == 0:
         print("!! REFUSED 视野为空：%s 下一个 .py 都没扫到 —— 这是「没扫到东西」，"
               "不是「扫完干净」" % (root,))
         return 2
-    print("看了 %d 个文件（%s），其中 %d 个有 main()，洞 %d 条，疑 %d 条"
-          % (seen, " + ".join(VIEWS), checked, len(problems), len(suspects)))
+    print("看了 %d 个文件（%s，锚 %s 在场），其中 %d 个有 main()，洞 %d 条"
+          % (seen, " + ".join(VIEWS), ANCHOR, checked, len(problems)))
+    # ★ 0 例的档位不等于判对（2026-11-01T21:4xZ）：空档印「未覆盖」，
+    #   不印「疑 0 条」——后者读起来和「疑档判得准」一模一样。
+    if suspects:
+        print("  疑 %d 条：%s" % (len(suspects), [x[0] for x in suspects]))
+    else:
+        print("  疑 0 条 —— **本档未覆盖**（0 例只说明没材料，不说明档位对）")
     for name, why in problems:
         print("  !! 洞 %-25s %s" % (name, why))
     for name, why in suspects:
