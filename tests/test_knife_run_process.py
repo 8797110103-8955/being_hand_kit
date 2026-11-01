@@ -108,10 +108,6 @@ class KnifeRunProcess(unittest.TestCase):
                          "前置不匹配被印成落点错 —— 两件事在回执上抹平了")
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
-
-
 class Foundation(unittest.TestCase):
     """★ 地基校验（2026-11-01T21:5xZ，围炉 #34 seq 4447 之后）。
 
@@ -162,3 +158,72 @@ class Foundation(unittest.TestCase):
         finally:
             sp.run(["git", "-C", str(knife_run.HERE), "checkout", "--",
                     str(target)], check=True)
+
+    # ——— 2026-11-01T22:4xZ：把「地基只比 SRC 一个文件」这笔明账落成四格 ———
+
+    def test_declared_set_has_a_denominator(self):
+        """声明集必须有分母，且必须真的罩住被测物与尺子。"""
+        files = knife_run.foundation_files()
+        self.assertGreaterEqual(len(files), 2, "地基只有一个文件 —— 尺子坏掉看不见")
+        names = {p.name for p in files}
+        self.assertIn(knife_run.SRC.name, names)
+        self.assertIn(pathlib.Path(knife_run.TRACER).name, names)
+
+    def test_empty_foundation_is_not_clean(self):
+        """★ 检查了 0 个文件 与 全干净 同形。
+
+        「一个都没查」曾经会落到 clean 分支（循环零次、dirty 空、unver 空）。
+        现在必须自己是一个状态，并且 main() 拒整批。"""
+        state, why = knife_run.foundation_dirty([])
+        self.assertEqual(state, "empty", "空集被读成 %s —— 零分母的绿" % state)
+        self.assertIn("0 个文件", why)
+
+    def test_one_dirty_member_names_the_dirty_one(self):
+        """多成员时点名，不许只说「脏了」——「哪个脏」与「脏」是两个事实。"""
+        import subprocess as sp
+        root = pathlib.Path(tempfile.mkdtemp(prefix="gitrepo_"))
+        a, b = root / "a.py", root / "b.py"
+        a.write_text("A = 1\n")
+        b.write_text("B = 1\n")
+        git = ["-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t"]
+        sp.run(["git", "init", "-q", str(root)], check=True)
+        sp.run(["git"] + git + ["add", "-A"], check=True)
+        sp.run(["git"] + git + ["commit", "-qm", "base"], check=True)
+        b.write_text("B = 2\n")                      # 只脏一个
+        try:
+            state, why = knife_run.foundation_dirty([a, b])
+            self.assertEqual(state, "dirty")
+            self.assertIn("b.py", why, "没点名是哪个文件脏")
+            self.assertNotIn("a.py", why, "把干净的那个也一起点名了")
+            self.assertIn("1/2", why, "没有分母：几个里脏了几个")
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+    def test_ftracked_file_is_not_called_clean(self):
+        """★ 未追踪的地基文件：`git diff HEAD -- f` 对它返回 0。
+
+        ⇒ 「HEAD 里根本没有这份」会伪装成「与 HEAD 一致」。
+        这一格同时验证两件事：旧判法确实读成干净（有判别力的正控），
+        新判法必须报 dirty。"""
+        import subprocess as sp
+        root = pathlib.Path(tempfile.mkdtemp(prefix="gitrepo_"))
+        a, new = root / "a.py", root / "new.py"
+        a.write_text("A = 1\n")
+        git = ["-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t"]
+        sp.run(["git", "init", "-q", str(root)], check=True)
+        sp.run(["git"] + git + ["add", "-A"], check=True)
+        sp.run(["git"] + git + ["commit", "-qm", "base"], check=True)
+        new.write_text("N = 1\n")                    # 从没被 commit 过
+        try:
+            old = sp.run(["git"] + git + ["diff", "--quiet", "HEAD", "--", str(new)])
+            self.assertEqual(old.returncode, 0,
+                             "旧判法这次没读成干净 —— 这一格失去了判别力，先查前提")
+            state, why = knife_run.foundation_dirty([a, new])
+            self.assertEqual(state, "dirty", "未追踪的地基文件被读成 %s" % state)
+            self.assertIn("new.py", why)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

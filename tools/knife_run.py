@@ -113,8 +113,37 @@ KNIVES = {
 }
 
 
-def foundation_dirty(path=SRC):
-    """地基是不是上一轮的残局。→ (状态, 说明)，状态 ∈ clean / dirty / unverifiable
+def foundation_files():
+    """这一批读数依赖哪些文件的原文。**声明的，不是 glob 的。**
+
+    ★ 为什么不扩到全仓（2026-11-01T22:4xZ，接上「地基只比 SRC 一个文件」那笔明账）：
+      全仓里本来就有合法脏文件（.guard_ledger.jsonl、截图、__pycache__），
+      全仓卫生会天天误红，而一条常红一周的闸最后会被关掉——
+      这正是 2d111d1 拒掉「节点<3」那个魔数的同一个理由。
+      ⇒ 地基的定义不是「仓里全部文件」，是**这批读数依赖的、我不打算在本次运行中
+        修改的那批**。
+    ★ 为什么不含本文件自己：我改刀集的时候它本来就该是脏的。把自己算进地基，
+      等于每次编辑都把自己判成残局——那不是严格，是把闸接到自己脚上。
+      刀集的内容不靠 sha 守，靠每把刀自己的前置（old 必须在源码里）。
+    ★ 集可以是 1 个也可以是 N 个，但不许是 0 个：见 foundation_dirty() 的 empty 态。
+    """
+    tracer = pathlib.Path(TRACER)
+    if not tracer.is_absolute():
+        tracer = HERE / tracer
+    return [SRC, tracer]
+
+
+def foundation_dirty(path=None):
+    """地基是不是上一轮的残局。→ (状态, 说明)，状态 ∈ clean / dirty / unverifiable / empty
+
+    ★ 2026-11-01T22:4xZ 扩到「声明集」（原来是单个 path=SRC，明账：只比一个文件）：
+      逐成员比 HEAD 原版，**任一脏就整批拒**，并且**点名**是哪个。
+      ★ 两种「看起来干净」的新形状在这里被分开：
+        ① 地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形 ⇒ empty，拒。
+        ② 地基文件不在 HEAD 里（未追踪/不存在）—— 它没有原版可言，
+           `git diff HEAD -- f` 对这种文件返回 0（不是差异），
+           于是「没有原版」会伪装成「与原版一致」 ⇒ 一律 dirty。
+      ⇒ 判据：**分母为零的绿不是绿；没有原版的干净不是干净。**
 
     为什么要有这个（2026-11-01T21:5xZ，围炉 #34 seq 4447 之后）：
     我的 sha 校验只覆盖「我写进去的那份 → 子进程读的那份」，
@@ -129,26 +158,57 @@ def foundation_dirty(path=SRC):
       前者我可以继续（合成根本来就没有原版），后者必须拒。
       但「不适用」必须印出来，不能安静地跳过：见 main() 里的那一行。
     """
-    root = path.parent.parent
-    # ★ 先问「这是不是一个工作树」，再问「有没有差异」（2026-11-01T22:0xZ 实测）：
-    #   `git diff --quiet HEAD -- <path>` 在**非仓目录**里也返回 rc=1，
-    #   stderr 写 `error: Could not access 'HEAD'`。
-    #   ⇒ rc=1 同时表示「有差异」和「我这个查询本身失败」——两个互斥结局同一个值。
-    #     所以判据不能只有退出码，得有一步**用词回答**的正面判据（category，不是 code）。
-    chk = subprocess.run(["git", "-C", str(root), "rev-parse",
-                          "--is-inside-work-tree"], capture_output=True)
-    if chk.returncode != 0 or chk.stdout.strip() != b"true":
-        err = (chk.stderr or b"")[:100].decode("utf-8", "replace").strip()
-        return "unverifiable", "%s 不在 git 工作树里（%s）" % (root.name or root, err)
-    d = subprocess.run(["git", "-C", str(root), "diff", "--quiet", "HEAD", "--",
-                        str(path)], capture_output=True)
-    if d.returncode == 0 and not d.stderr.strip():
-        return "clean", ""
-    if d.returncode == 1 and not d.stderr.strip():
-        return "dirty", ("%s 与 HEAD 不一致 —— 它可能是我上一轮崩溃留下的变异态，"
-                         "这一批刀会全砍在残局上" % path.name)
-    err = (d.stderr or b"")[:120].decode("utf-8", "replace").strip()
-    return "unverifiable", "git diff rc=%d（%s）" % (d.returncode, err)
+    if path is None:
+        paths = foundation_files()
+    elif isinstance(path, (str, pathlib.Path)):
+        paths = [pathlib.Path(path)]
+    else:
+        paths = [pathlib.Path(p) for p in path]
+
+    if not paths:
+        return "empty", ("地基集为空 —— 「检查了 0 个文件」与「全干净」"
+                         "在读数上逐字同形，这一批不给绿色")
+
+    checked, dirty, unver, notes = 0, [], [], []
+    for p in paths:
+        # ① 存在性：不存在的文件没有原版，「没有」不许冒充「一致」
+        if not p.exists():
+            dirty.append("%s（文件不存在）" % p.name)
+            continue
+        # ② 先问「这是不是一个工作树」，再问「有没有差异」（2026-11-01T22:0xZ 实测）：
+        #   `git diff --quiet HEAD -- <path>` 在**非仓目录**里也返回 rc=1，
+        #   stderr `error: Could not access 'HEAD'`。
+        #   ⇒ rc=1 同时表示「有差异」和「我这个查询本身失败」——两个互斥结局同一个值。
+        #     所以判据不能只有退出码，得有一步**用词回答**的正面判据（category，不是 code）。
+        tl = subprocess.run(["git", "-C", str(p.parent), "rev-parse",
+                             "--show-toplevel"], capture_output=True)
+        if tl.returncode != 0 or not tl.stdout.strip():
+            err = (tl.stderr or b"")[:100].decode("utf-8", "replace").strip()
+            unver.append("%s 不在 git 工作树里（%s）" % (p.name, err))
+            continue
+        # ③ `git status --porcelain` 而不是 `diff HEAD`：后者对**未追踪**文件返回 0，
+        #   于是「HEAD 里根本没有这份」会伪装成「与 HEAD 一致」。
+        st = subprocess.run(["git", "-C", str(tl.stdout.strip().decode()),
+                             "status", "--porcelain", "--", str(p)],
+                            capture_output=True)
+        if st.returncode != 0 or st.stderr.strip():
+            err = (st.stderr or b"")[:120].decode("utf-8", "replace").strip()
+            notes.append("git status rc=%d（%s）" % (st.returncode, err))
+            continue
+        checked += 1
+        line = (st.stdout or b"").decode("utf-8", "replace").strip()
+        if line:
+            dirty.append("%s（%s）" % (p.name, line.split()[0]))
+
+    if dirty:
+        return "dirty", ("%d/%d 个地基文件与 HEAD 原版不一致：%s —— "
+                         "它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上"
+                         % (len(dirty), len(paths), ", ".join(dirty)))
+    if unver or notes or checked != len(paths):
+        why = "; ".join(unver + notes) or ("只有 %d/%d 个地基文件是被查过的"
+                                           % (checked, len(paths)))
+        return "unverifiable", why
+    return "clean", ""
 
 
 def invalid_reasons(base, rows, orig):
@@ -212,10 +272,18 @@ def main():
     # 才被这一行同样的检查抓到，所以它从此直接印在报表头上。
     print("env python=%s os=%s impl=%s"
           % (platform.python_version(), platform.system(), platform.python_implementation()))
+    files = foundation_files()
+    print("· 地基 %d 个文件（声明集，非 glob）：%s"
+          % (len(files), ", ".join(p.name for p in files)))
     state, why = foundation_dirty()
+    if state == "empty":
+        # 分母为零的绿不是绿（2026-11-01T22:4xZ）
+        print("!! RUN INVALID %s" % why)
+        guard_note("knife_run", "refused", why[:200])
+        return 9
     if state == "dirty":
         print("!! RUN INVALID 地基不干净：%s" % why)
-        print("   先 `git checkout -- %s` 再跑；这一批不给读数" % SRC.name)
+        print("   先 `git checkout -- <上面点名的那几个>` 再跑；这一批不给读数")
         guard_note("knife_run", "refused", why[:200])
         return 9
     if state == "unverifiable":
