@@ -51,10 +51,19 @@ def _text_body():
 
 class TestVersion0137(unittest.TestCase):
 
-    def test_version_is_current(self):
-        """Newest release test owns the exact current version."""
-        self.assertIn('__version__ = "0.13.7"', _read("hand", "__init__.py"))
-        self.assertIn('"version": "0.13.7"', _read("kit", "manifest.json"))
+    def test_version_is_at_least_its_own(self):
+        """Historical lock (2026-11-03, at 0.13.8).
+
+        这一格原来写死「当前版本 == 0.13.7」，于是每一次 bump 都把它变红——
+        把「版本变了」误报成「机制坏了」。它只能锁两件事：这一版真的发过
+        （版本不倒退），以及 init 和 manifest 是同一个值（这一条永远有意义）。
+        exact-current 断言归最新那版发布测试，见 test_release_0138。
+        """
+        m = re.search(r'__version__ = "(\d+)\.(\d+)\.(\d+)"', _read("hand", "__init__.py"))
+        self.assertIsNotNone(m, "unparseable __version__")
+        got = tuple(int(x) for x in m.groups())
+        self.assertGreaterEqual(got, (0, 13, 7))
+        self.assertIn('"version": "%d.%d.%d"' % got, _read("kit", "manifest.json"))
 
     def test_changelog_entry_names_the_changes(self):
         body = _read("CHANGELOG.md")

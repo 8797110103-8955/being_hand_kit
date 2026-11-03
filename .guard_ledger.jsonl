@@ -10,3 +10,282 @@
 {"ts": "2026-11-01T14:53:54Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
 {"ts": "2026-11-01T14:53:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
 {"ts": "2026-11-01T14:53:55Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:41Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:35:41Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:35:41Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:35:41Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:35:41Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:35:42Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:42Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:43Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:44Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:45Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:47Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:48Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:51Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:55Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:35:55Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:40Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:36:40Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:36:40Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:36:40Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:36:40Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:36:41Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:41Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:42Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:43Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:44Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:45Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:46Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:48Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:51Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:53Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:36:53Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:35Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:37:35Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:37:35Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:37:35Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:37:35Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:37:36Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:36Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:37Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:38Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:39Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:41Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:42Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:43Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:44Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:45Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:46Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:47Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:37:49Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:08Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:39:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:39:08Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:39:08Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:39:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:39:09Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:09Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:10Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:11Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:13Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:16Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:17Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:18Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:20Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:21Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:22Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:39:22Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:12Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:12Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:16Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:17Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:18Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:19Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:21Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:22Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:23Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:24Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:25Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:25Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:39Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:39Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:40Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:41Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:42Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:44Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:45Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:46Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:47Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:48Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:52Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:54Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:54Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:55Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:56Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:57Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:40:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:03Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:04Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:05Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:06Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:06Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:08Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:08Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:11Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:12Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:13Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:16Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:18Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:19Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:20Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:21Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:41:21Z", "guard": "knife_run", "action": "refused", "detail": "刀落在别处 1/10 ['K6_hot_is_loaded']（我写的那份 ≠ 它跑的那份）", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:06Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:42:06Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:42:06Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:42:06Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:42:06Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:42:07Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:07Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:11Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:12Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:13Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:16Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:17Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:19Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:20Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:42:20Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:05Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:43:05Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:43:05Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:43:05Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:43:05Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-01T18:43:06Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:06Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:07Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:10Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:12Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:13Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:16Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:17Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:19Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:19Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:32Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:32Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:33Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:34Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:35Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:36Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:37Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:39Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:40Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:41Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:42Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:43Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:44Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-01T18:43:44Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:46Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:13:46Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:13:46Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:13:46Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:13:46Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:13:47Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:47Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:48Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:49Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:50Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:53Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:55Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:56Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:57Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:13:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:00Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:00Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:52Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:54Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:55Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:56Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:57Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:14:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:03Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:04Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:05Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:15:05Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:07Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:10Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:11Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:12Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:13Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:14Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:15Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:17Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:18Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:19Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:20Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:20:20Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:21:58Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:21:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:21:58Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:21:58Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:21:58Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:21:59Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:21:59Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:00Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:03Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:05Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:06Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:07Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:10Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:12Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:12Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:57Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:22:57Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:22:57Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:22:57Z", "guard": "assert_trace", "action": "refused", "detail": "rc=9 fatal=asserts outside TARGET — 这一格的判据有一部分不在我的视野里，不算全绿; no tests / no asserts recorded — 装置没被测到，不是通过 external=0", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:22:57Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=1 asserts=1", "provenance": "constructed:tests/test_assert_trace_selfcheck.py", "run_id": null}
+{"ts": "2026-11-03T10:22:58Z", "guard": "knife_run", "action": "refused", "detail": "1/2 个地基文件与 HEAD 原版不一致：mcp_server.py（M） —— 它们可能是我上一轮崩溃留下的变异态，这一批会全砍在残局上", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:58Z", "guard": "knife_run", "action": "refused", "detail": "地基集为空 —— 「检查了 0 个文件」与「全干净」在读数上逐字同形，这一批不给绿色", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:22:59Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:00Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:01Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:02Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:03Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:04Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:06Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:07Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=17", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:08Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:09Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=18", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:10Z", "guard": "assert_trace", "action": "ran", "detail": "tests_run=10 asserts=19", "provenance": "unlabeled", "run_id": null}
+{"ts": "2026-11-03T10:23:10Z", "guard": "knife_run", "action": "ran", "detail": "clean", "provenance": "unlabeled", "run_id": null}

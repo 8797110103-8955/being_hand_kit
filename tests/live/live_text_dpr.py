@@ -59,8 +59,29 @@ def main():
                                "JSON.stringify({log:window.__log, reads:window.__reads})",
                                "returnByValue": True}, timeout=10)
         print("page says:", r["result"]["value"])
+        page_says = json.loads(r["result"]["value"])
     finally:
         ws.close()
+
+    # 0.13.8 (2026-11-03): 这一段原来只印读数，没有判据 —— 入口块 sys.exit(main())
+    # 是 11-01 加的，但它守的是一个恒返回 None 的函数 ⇒ rc 恒 0。
+    # 「有东西决定退出码」与「那个东西判不判」是两个洞，前一个修完这个还在。
+    cp = ev.get("click_point") or {}
+    logs = page_says.get("log") or []
+    first = logs[0] if logs else {}
+    checks = [
+        ("click_point.x==280", cp.get("x") == 280.0),
+        ("click_point.y==180", cp.get("y") == 180.0),
+        ("page.reads==1", page_says.get("reads") == 1),
+        ("page.log[0].x==280", first.get("x") == 280),
+        ("page.log[0].reads_at_click==1", first.get("reads_at_click") == 1),
+        ("page.log[0].trusted is True", first.get("trusted") is True),
+    ]
+    for name, ok in checks:
+        print("  [%s] %s" % ("ok" if ok else "FAIL", name))
+    passed = all(ok for _, ok in checks)
+    print("verdict:", "PASS" if passed else "FAIL")
+    return 0 if passed else 1
 
 if __name__ == "__main__":
     sys.exit(main())

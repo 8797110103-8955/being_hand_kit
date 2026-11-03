@@ -37,10 +37,14 @@ import forall_scan  # noqa: E402
 # 是为了让「变了但我没注意」不可能发生。
 PINNED = {
     "root": ROOT,
-    "all": 8,
+    # 2026-11-03 (0.13.8): all 8→9，total 42→43。
+    # 多的那一处是 tests/live/live_text_dpr.py 里新加的
+    #   `passed = all(ok for _, ok in checks)`
+    # —— 给那个 live 脚本补判据时写的。它是真的"全部格都过"，不是扫描器的假阳性。
+    "all": 9,
     "any": 34,
     "not_any": 5,
-    "total": 42,
+    "total": 43,
 }
 
 
